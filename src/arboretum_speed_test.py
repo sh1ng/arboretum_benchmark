@@ -24,7 +24,9 @@ if __name__ == '__main__':
 
     config = json.dumps({'objective': 1, 'verbose':
         {
-            'gpu': True
+            'gpu': True,
+            'booster': True,
+            'data':True
         },
                          'tree':
                              {
