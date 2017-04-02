@@ -18,7 +18,7 @@ if __name__ == '__main__':
     df = df.drop(['label'], axis=1)
     X = df.values
 
-    X_train, X_test, labels_train, labels_test = train_test_split(X, labels, test_size = 0.2, random_state = 42)
+    X_train, X_test, labels_train, labels_test = train_test_split(X, labels, test_size = 500000, random_state = 42)
 
     data = arboretum.DMatrix(X_train, y=labels_train)
 
