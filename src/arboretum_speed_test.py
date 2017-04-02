@@ -12,9 +12,9 @@ if __name__ == '__main__':
                                                    'jet 2 phi', 'jet 2 b-tag', 'jet 3 pt', 'jet 3 eta', 'jet 3 phi', 'jet 3 b-tag',
                                                    'jet 4 pt', 'jet 4 eta', 'jet 4 phi', 'jet 4 b-tag', 'm_jj', 'm_jjj', 'm_lv',
                                                    'm_jlv', 'm_bb', 'm_wbb', 'm_wwbb'])
-    labels = df['label'].get_values()
+    labels = df['label'].values
     df = df.drop(['label'], axis=1)
-    X = df.get_values
+    X = df.values
 
     X_train, X_test, labels_train, labels_test = train_test_split(X, labels, test_size = 0.2, random_state = 42)
 
