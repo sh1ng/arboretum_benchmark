@@ -33,6 +33,7 @@ if __name__ == '__main__':
     param['eta'] = 0.1
     param['gamma'] = 0.0
     param['alpha'] = 0.0
+    param['tree_method'] = 'exact'
 
     start_time = time.time()
 
