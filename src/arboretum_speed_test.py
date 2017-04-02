@@ -28,10 +28,10 @@ if __name__ == '__main__':
         },
                          'tree':
                              {
-                                 'eta': 0.2,
+                                 'eta': 0.1,
                                  'max_depth': 9,
                                  'gamma': 0.0,
-                                 'min_child_weight': 2.0,
+                                 'min_child_weight': 100.0,
                                  'min_leaf_size': 0,
                                  'colsample_bytree': 1.0,
                                  'colsample_bylevel': 1.0,
