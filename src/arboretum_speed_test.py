@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 import arboretum
 import json
+
+import time
 from sklearn.model_selection import train_test_split
 
 
@@ -27,7 +29,7 @@ if __name__ == '__main__':
                          'tree':
                              {
                                  'eta': 0.2,
-                                 'max_depth': 6,
+                                 'max_depth': 9,
                                  'gamma': 0.0,
                                  'min_child_weight': 2.0,
                                  'min_leaf_size': 0,
@@ -37,11 +39,12 @@ if __name__ == '__main__':
                                  'alpha': 0.0
                              }})
     model = arboretum.Garden(config, data)
-
+    start_time = time.time()
     # grow trees
-    for i in range(100):
+    for i in range(500):
         model.grow_tree()
         print('next tree')
+    print(time.time() -  start_time)
 
 
 
