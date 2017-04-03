@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import arboretum
 import json
+from sklearn.metrics import roc_auc_score
 
 import time
 from sklearn.model_selection import train_test_split
@@ -43,10 +44,15 @@ if __name__ == '__main__':
     model = arboretum.Garden(config, data)
     start_time = time.time()
     # grow trees
-    for i in range(500):
+    for i in range(5):
         model.grow_tree()
         print('next tree')
     print(time.time() -  start_time)
+
+    prediction = model.predict(X_test)
+    print(roc_auc_score(labels_test, prediction))
+
+
 
 
 
