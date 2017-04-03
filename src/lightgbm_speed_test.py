@@ -4,6 +4,8 @@ import lightgbm as lgb
 import json
 
 import time
+
+from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import train_test_split
 
 
@@ -40,6 +42,9 @@ if __name__ == '__main__':
                     lgb_train,
                     num_boost_round=500)
     print(time.time() -  start_time)
+
+    y_pred = gbm.predict(X_test)
+    print(roc_auc_score(labels_test, y_pred))
 
 
 
