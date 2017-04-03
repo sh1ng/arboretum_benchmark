@@ -22,6 +22,7 @@ if __name__ == '__main__':
     X_train, X_test, labels_train, labels_test = train_test_split(X, labels, test_size = 500000, random_state = 42)
 
     data = arboretum.DMatrix(X_train, y=labels_train)
+    X_test = arboretum.DMatrix(X_test)
 
     config = json.dumps({'objective': 1, 'verbose':
         {
