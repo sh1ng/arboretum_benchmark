@@ -38,7 +38,7 @@ if __name__ == '__main__':
         },
                          'tree':
                              {
-                                 'eta': 0.2,
+                                 'eta': 0.3,
                                  'max_depth': 9,
                                  'gamma': 0.0,
                                  'min_child_weight': 100.0,
