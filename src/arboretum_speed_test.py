@@ -27,7 +27,7 @@ if __name__ == '__main__':
     config = json.dumps({'objective': 1,
                          'internals':
 {
-'double_precision': False,
+'double_precision': True,
 'compute_overlap': 5
 },
                          'verbose':
