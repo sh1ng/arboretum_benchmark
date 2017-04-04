@@ -40,7 +40,7 @@ if __name__ == '__main__':
     # grow trees
     gbm = lgb.train(params,
                     lgb_train,
-                    num_boost_round=600)
+                    num_boost_round=5)
     print(time.time() -  start_time)
 
     y_pred = gbm.predict(X_test)
