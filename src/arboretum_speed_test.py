@@ -38,8 +38,8 @@ if __name__ == '__main__':
         },
                          'tree':
                              {
-                                 'eta': 0.25,
-                                 'max_depth': 15,
+                                 'eta': 0.2,
+                                 'max_depth': 16,
                                  'gamma': 0.0,
                                  'min_child_weight': 100.0,
                                  'min_leaf_size': 0,
