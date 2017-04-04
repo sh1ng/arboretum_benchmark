@@ -45,7 +45,7 @@ if __name__ == '__main__':
     model = arboretum.Garden(config, data)
     start_time = time.time()
     # grow trees
-    for i in range(500):
+    for i in range(5):
         model.grow_tree()
         print('next tree')
     print(time.time() -  start_time)
