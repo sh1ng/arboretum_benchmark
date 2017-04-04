@@ -27,7 +27,7 @@ if __name__ == '__main__':
     config = json.dumps({'objective': 1,
                          'internals':
 {
-'double_precision': True,
+'double_precision': False,
 'compute_overlap': 5
 },
                          'verbose':
@@ -38,8 +38,8 @@ if __name__ == '__main__':
         },
                          'tree':
                              {
-                                 'eta': 0.5,
-                                 'max_depth': 9,
+                                 'eta': 0.25,
+                                 'max_depth': 15,
                                  'gamma': 0.0,
                                  'min_child_weight': 100.0,
                                  'min_leaf_size': 0,
