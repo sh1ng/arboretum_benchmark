@@ -43,7 +43,7 @@ if __name__ == '__main__':
                                  'gamma': 0.0,
                                  'min_child_weight': 100.0,
                                  'min_leaf_size': 0,
-                                 'colsample_bytree': 0.8,
+                                 'colsample_bytree': 1.0,
                                  'colsample_bylevel': 1.0,
                                  'lambda': 0.0,
                                  'alpha': 0.0
