@@ -50,10 +50,12 @@ if __name__ == '__main__':
                              }})
     model = arboretum.Garden(config, data)
     start_time = time.time()
+    iter_time = time.time()
     # grow trees
     for i in range(500):
         model.grow_tree()
-        print('next tree')
+        print('next tree', time.time() - iter_time)
+        iter_time = time.time()
     print(time.time() -  start_time)
 
     prediction = model.predict(X_test)
