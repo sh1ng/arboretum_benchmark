@@ -28,7 +28,7 @@ if __name__ == '__main__':
                          'internals':
 {
 'double_precision': False,
-'compute_overlap': 5
+'compute_overlap': 3
 },
                          'verbose':
         {
@@ -52,14 +52,16 @@ if __name__ == '__main__':
     start_time = time.time()
     iter_time = time.time()
     # grow trees
-    for i in range(500):
+    for i in range(100):
         model.grow_tree()
         print('next tree', time.time() - iter_time)
         iter_time = time.time()
     print(time.time() -  start_time)
 
-    prediction = model.predict(X_test)
-    print(roc_auc_score(labels_test, prediction))
+    labels_pred = model.predict(X_train)
+    labels_pred_test = model.predict(X_test)
+    print('roc auc train: {0} test: {1}'.format(roc_auc_score(labels_train, labels_pred),
+                                                roc_auc_score(labels_test, labels_pred_test)))
 
 
 

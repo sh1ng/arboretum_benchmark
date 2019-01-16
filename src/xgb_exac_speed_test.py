@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-import lightgbm as lgb
+import xgboost
 import json
 
 import time
@@ -22,31 +22,32 @@ if __name__ == '__main__':
 
     X_train, X_test, labels_train, labels_test = train_test_split(X, labels, test_size = 500000, random_state = 42)
 
-    lgb_train = lgb.Dataset(X_train, labels_train)
+    data = xgboost.DMatrix(X_train, label=labels_train)
 
-    params = {
-        'tree_learner': 'serial',
-        'task': 'train',
-        'objective': 'binary',
-        'min_data_in_leaf':0,
-        'min_sum_hessian_in_leaf':100,
-        'num_leaves': 255,
-        'learning_rate': 0.1,
-        'verbose': 1,
-        'device': 'gpu',
-    }
-
+    param = {'max_depth': 8,
+             'silent': False, 'objective': "reg:logistic"}
+    param['nthread'] = 4
+    param['min_child_weight'] = 100
+    param['colspan_by_tree'] = 1.0
+    param['colspan_by_level'] = 1.0
+    # param['eval_metric'] = 'rmse'
+    param['lambda'] = 0.0
+    param['eta'] = 0.1
+    param['gamma'] = 0.0
+    param['alpha'] = 0.0
+    param['tree_method'] = 'gpu_hist'
 
     start_time = time.time()
-    # grow trees
-    gbm = lgb.train(params,
-                    lgb_train,
-                    num_boost_round=100)
+
+    model = xgboost.train(param, data, 100)
+
     print(time.time() -  start_time)
 
-    labels_pred = gbm.predict(X_train)
-    labels_pred_test = gbm.predict(X_test)
-    print('roc auc train: {0} test: {1}'.format(roc_auc_score(labels_train, labels_pred), roc_auc_score(labels_test, labels_pred_test)))
+    labels_pred = model.predict(X_train)
+    labels_pred_test = model.predict(X_test)
+    print('roc auc train: {0} test: {1}'.format(roc_auc_score(labels_train, labels_pred),
+                                                roc_auc_score(labels_test, labels_pred_test)))
+
 
 
 

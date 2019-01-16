@@ -4,6 +4,8 @@ import xgboost
 import json
 
 import time
+
+from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import train_test_split
 
 
@@ -37,9 +39,15 @@ if __name__ == '__main__':
 
     start_time = time.time()
 
-    model = xgboost.train(param, data, 500)
+    model = xgboost.train(param, data, 100)
 
     print(time.time() -  start_time)
+
+    labels_pred = model.predict(X_train)
+    labels_pred_test = model.predict(X_test)
+    print('roc auc train: {0} test: {1}'.format(roc_auc_score(labels_train, labels_pred),
+                                                roc_auc_score(labels_test, labels_pred_test)))
+
 
 
 
