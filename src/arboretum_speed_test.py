@@ -45,7 +45,7 @@ if __name__ == '__main__':
                                  'min_leaf_size': 0,
                                  'colsample_bytree': 0.85,
                                  'colsample_bylevel': 0.85,
-                                 'lambda': 1.0,
+                                 'lambda': 0.0,
                                  'alpha': 0.0
                              }})
     model = arboretum.Garden(config, X_train)
