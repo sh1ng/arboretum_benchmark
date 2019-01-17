@@ -22,7 +22,8 @@ if __name__ == '__main__':
 
     X_train, X_test, labels_train, labels_test = train_test_split(X, labels, test_size = 500000, random_state = 42)
 
-    data = xgboost.DMatrix(X_train, label=labels_train)
+    X_train = xgboost.DMatrix(X_train, label=labels_train)
+    X_test = xgboost.DMatrix(X_test)
 
     param = {'max_depth': 9,
              'silent': False, 'objective': "reg:logistic"}
@@ -38,7 +39,7 @@ if __name__ == '__main__':
 
     start_time = time.time()
 
-    model = xgboost.train(param, data, 100)
+    model = xgboost.train(param, X_train, 100)
 
     print(time.time() -  start_time)
 
