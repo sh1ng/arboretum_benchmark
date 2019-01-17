@@ -24,18 +24,17 @@ if __name__ == '__main__':
 
     data = xgboost.DMatrix(X_train, label=labels_train)
 
-    param = {'max_depth': 8,
+    param = {'max_depth': 9,
              'silent': False, 'objective': "reg:logistic"}
     param['nthread'] = 4
     param['min_child_weight'] = 100
-    param['colspan_by_tree'] = 1.0
-    param['colspan_by_level'] = 1.0
-    # param['eval_metric'] = 'rmse'
+    param['colspan_by_tree'] = 0.85
+    param['colspan_by_level'] = 0.85
     param['lambda'] = 0.0
     param['eta'] = 0.1
     param['gamma'] = 0.0
     param['alpha'] = 0.0
-    param['tree_method'] = 'gpu_exact'
+    param['tree_method'] = 'gpu_hist'
 
     start_time = time.time()
 
