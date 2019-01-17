@@ -22,6 +22,8 @@ if __name__ == '__main__':
 
     X_train, X_test, labels_train, labels_test = train_test_split(X, labels, test_size = 500000, random_state = 42)
 
+    start_time = time.time()
+
     lgb_train = lgb.Dataset(X_train, labels_train)
 
     params = {
@@ -37,9 +39,6 @@ if __name__ == '__main__':
         'max_bin': 63,
     }
 
-
-    start_time = time.time()
-    # grow trees
     gbm = lgb.train(params,
                     lgb_train,
                     num_boost_round=100)

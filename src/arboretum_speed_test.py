@@ -21,6 +21,8 @@ if __name__ == '__main__':
 
     X_train, X_test, labels_train, labels_test = train_test_split(X, labels, test_size = 500000, random_state = 42)
 
+    start_time = time.time()
+
     X_train = arboretum.DMatrix(X_train, y=labels_train)
     X_test = arboretum.DMatrix(X_test)
 
@@ -49,7 +51,6 @@ if __name__ == '__main__':
                                  'alpha': 0.0
                              }})
     model = arboretum.Garden(config, X_train)
-    start_time = time.time()
     iter_time = time.time()
     # grow trees
     for i in range(100):

@@ -22,6 +22,8 @@ if __name__ == '__main__':
 
     X_train, X_test, labels_train, labels_test = train_test_split(X, labels, test_size = 500000, random_state = 42)
 
+    start_time = time.time()
+
     X_train = xgboost.DMatrix(X_train, label=labels_train)
     X_test = xgboost.DMatrix(X_test)
 
@@ -36,8 +38,6 @@ if __name__ == '__main__':
     param['gamma'] = 0.0
     param['alpha'] = 0.0
     param['tree_method'] = 'gpu_hist'
-
-    start_time = time.time()
 
     model = xgboost.train(param, X_train, 100)
 
