@@ -34,6 +34,7 @@ if __name__ == '__main__':
         'learning_rate': 0.1,
         'verbose': 1,
         'device': 'gpu',
+        'max_bin': 63,
     }
 
 
