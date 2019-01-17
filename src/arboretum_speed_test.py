@@ -21,7 +21,7 @@ if __name__ == '__main__':
 
     X_train, X_test, labels_train, labels_test = train_test_split(X, labels, test_size = 500000, random_state = 42)
 
-    data = arboretum.DMatrix(X_train, y=labels_train)
+    X_train = arboretum.DMatrix(X_train, y=labels_train)
     X_test = arboretum.DMatrix(X_test)
 
     config = json.dumps({'objective': 1,
@@ -39,16 +39,16 @@ if __name__ == '__main__':
                          'tree':
                              {
                                  'eta': 0.1,
-                                 'max_depth': 9,
+                                 'max_depth': 10,
                                  'gamma': 0.0,
                                  'min_child_weight': 100.0,
                                  'min_leaf_size': 0,
-                                 'colsample_bytree': 1.0,
-                                 'colsample_bylevel': 1.0,
-                                 'lambda': 0.0,
+                                 'colsample_bytree': 0.85,
+                                 'colsample_bylevel': 0.85,
+                                 'lambda': 1.0,
                                  'alpha': 0.0
                              }})
-    model = arboretum.Garden(config, data)
+    model = arboretum.Garden(config, X_train)
     start_time = time.time()
     iter_time = time.time()
     # grow trees
