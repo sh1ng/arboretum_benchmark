@@ -77,7 +77,9 @@ if __name__ == '__main__':
 
     assert args.target in benchmarks, 'target must be one of the options: arboretum, xgboost, lightgbm'
 
+    print('reading data....')
     label, data_float, data_cat = read_data()
+    print('startring benchmark {0}'.format(args.target))
     
     prediction = benchmarks[args.target](label, data_float, data_cat)
 
