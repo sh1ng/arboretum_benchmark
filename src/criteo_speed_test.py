@@ -14,9 +14,6 @@ def run_lightgbm(label, data_float, data_cat, data_float_test, data_cat_test):
 
     categorical_feature = list([i + data_float.shape[1] for i in range(data_cat.shape[1])])
 
-    # for i in range(data_cat.shape[1]):
-    #     print(i, np.unique(data_cat[:,i]))
-
     data_raw = np.concatenate([data_float, data_cat], axis=1)
 
     data = lgb.Dataset(data=data_raw, label=label, categorical_feature='auto')
@@ -32,6 +29,7 @@ def run_lightgbm(label, data_float, data_cat, data_float_test, data_cat_test):
         'verbose': 1,
         'device': 'gpu',
         'max_bin': 127,
+        'lambda_l2': 0.1,
     }
 
     start_time = time.time()
@@ -39,11 +37,9 @@ def run_lightgbm(label, data_float, data_cat, data_float_test, data_cat_test):
     gbm = lgb.train(params, data, num_boost_round=500)
     print(time.time() - start_time)
 
-    prediction =  gbm.predict(data_raw)
-
     data_test = np.concatenate([data_float_test, data_cat_test], axis=1)
 
-    return prediction, gbm.predict(data_test)
+    return gbm.predict(data_raw), gbm.predict(data_test)
 
 def run_arboretum(label, data_float, data_cat, data_float_test, data_cat_test):
     import arboretum
@@ -63,9 +59,9 @@ def run_arboretum(label, data_float, data_cat, data_float_test, data_cat_test):
         'tree':
         {
         'eta': 0.1,
-        'max_depth': 10,
+        'max_depth': 11,
         'gamma': 0.0,
-        'min_child_weight': 5,
+        'min_child_weight': 10,
         'min_leaf_size': 0,
         'colsample_bytree': 0.8,
         'colsample_bylevel': 0.8,
@@ -84,11 +80,39 @@ def run_arboretum(label, data_float, data_cat, data_float_test, data_cat_test):
         model.grow_tree()
         print('next tree', time.time() - iter_time)
 
-    prediction = model.predict(data)
-
     data_test = arboretum.DMatrix(data_float_test, data_category=data_cat_test)
 
-    return prediction, model.predict(data_test)
+    return model.predict(data), model.predict(data_test)
+
+def run_xgboost(label, data_float, data_cat, data_float_test, data_cat_test):
+    import xgboost
+
+    data_raw = np.concatenate([data_float, data_cat], axis=1)
+    data_test = np.concatenate([data_float_test, data_cat_test], axis=1)
+
+    data = xgboost.DMatrix(data_raw, label=label)
+    data_test = xgboost.DMatrix(data_test)
+
+    param = {'max_depth': 9,
+             'silent': False, 
+             'objective': "reg:logistic"}
+    param['nthread'] = 4
+    param['min_child_weight'] = 5
+    param['colspan_by_tree'] = 0.8
+    param['colspan_by_level'] = 0.8
+    param['lambda'] = 0.1
+    param['eta'] = 0.1
+    param['gamma'] = 0.0
+    param['alpha'] = 0.0
+    param['tree_method'] = 'gpu_hist'
+    
+    start_time = time.time()
+
+    model = xgboost.train(param, data, 500)
+
+    print(time.time() - start_time)
+
+    return model.predict(data), model.predict(data_test)
 
     
 if __name__ == '__main__':
@@ -99,6 +123,7 @@ if __name__ == '__main__':
     benchmarks = {
         'arboretum': run_arboretum,
         'lightgbm': run_lightgbm,
+        'xgboost': run_xgboost,
     }
 
     assert args.target in benchmarks, 'target must be one of the options: arboretum, xgboost, lightgbm'
