@@ -24,4 +24,4 @@ def read_data():
 
 if __name__ == '__main__':
     labels, data_float, data_cat = read_data()
-    np.savez_compressed('data/day_0.npz', {'labels':labels, 'data_float':data_float, 'data_cat':data_cat})
+    np.savez_compressed('data/day_0.npz', labels=labels, data_float=data_float, data_cat=data_cat)
