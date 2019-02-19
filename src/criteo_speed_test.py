@@ -5,33 +5,17 @@ import time
 from sklearn.metrics import roc_auc_score
 
 def read_data():
-    integer_features = list(['i{0}'.format(i) for i in range(1, 14, 1)])
-    cat_features = list(['c{0}'.format(i) for i in range(1, 27, 1)])
-    names = list(['label'])
-    names.extend(integer_features)
-    names.extend(cat_features)
-    dtypes = {
-        'label': np.float32,
-    }
-    for item in integer_features:
-        dtypes[item] = np.float32
-    for item in cat_features:
-        dtypes[item] = 'category'
-
-    data = pd.read_csv('data/day_0', nrows=300000, sep='\t', header=None, names=names, dtype=dtypes)
-
-    tmp_data = data[integer_features].values.astype(np.float32)
-    tmp_data = np.where(np.isnan(tmp_data), -2., tmp_data)
-    return data.label.values.astype(np.float32), tmp_data, data[cat_features].apply(lambda x: x.cat.codes + 1).values.astype(np.int32)
+    data = np.load('data/day_0.npz')
+    return data['labels'], data['data_float'], data['data_cat']
 
 def run_lightgbm(label, data_float, data_cat):
     import lightgbm as lgb
 
     categorical_feature = list([i + data_float.shape[1] for i in range(data_cat.shape[1])])
 
-    data = np.concatenate([data_float, data_cat], axis=1)
+    data_raw = np.concatenate([data_float, data_cat], axis=1)
 
-    data = lgb.Dataset(data=data, label=label, categorical_feature=categorical_feature)
+    data = lgb.Dataset(data=data_raw, label=label, categorical_feature=categorical_feature)
 
     params = {
         'tree_learner': 'serial',
@@ -42,7 +26,7 @@ def run_lightgbm(label, data_float, data_cat):
         'num_leaves': 255,
         'learning_rate': 0.1,
         'verbose': 1,
-        'device': 'gpu',
+        # 'device': 'gpu',
         'max_bin': 63,
     }
 
@@ -51,7 +35,7 @@ def run_lightgbm(label, data_float, data_cat):
     gbm = lgb.train(params, data, num_boost_round=1000)
     print(time.time() - start_time)
 
-    return gbm.predict(data)
+    return gbm.predict(data_raw)
 
 def run_arboretum(label, data_float, data_cat):
     import arboretum
@@ -71,9 +55,9 @@ def run_arboretum(label, data_float, data_cat):
         'tree':
         {
         'eta': 0.1,
-        'max_depth': 8,
+        'max_depth': 9,
         'gamma': 0.0,
-        'min_child_weight': 2,
+        'min_child_weight': 1,
         'min_leaf_size': 2,
         'colsample_bytree': 0.8,
         'colsample_bylevel': 0.8,
