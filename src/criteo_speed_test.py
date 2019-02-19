@@ -97,7 +97,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     benchmarks = {
-        'arboretum': run_arboretum
+        'arboretum': run_arboretum,
+        'lightgbm': run_lightgbm,
     }
 
     assert args.target in benchmarks, 'target must be one of the options: arboretum, xgboost, lightgbm'
