@@ -18,7 +18,7 @@ def read_data():
     for item in cat_features:
         dtypes[item] = 'category'
 
-    data = pd.read_csv('data/day_0', nrows=30000000, sep='\t', header=None, names=names, dtype=dtypes)
+    data = pd.read_csv('data/day_0', nrows=300000, sep='\t', header=None, names=names, dtype=dtypes)
 
     tmp_data = data[integer_features].values.astype(np.float32)
     tmp_data = np.where(np.isnan(tmp_data), -2., tmp_data)
@@ -27,7 +27,11 @@ def read_data():
 def run_lightgbm(label, data_float, data_cat):
     import lightgbm as lgb
 
-    data = lgb.Dataset(data=[data_float, data_cat], label=label)
+    categorical_feature = list([i + data_float.shape[1] for i in range(data_cat.shape[1])])
+
+    data = np.concatenate([data_float, data_cat], axis=1)
+
+    data = lgb.Dataset(data=data, label=label, categorical_feature=categorical_feature)
 
     params = {
         'tree_learner': 'serial',
@@ -42,10 +46,10 @@ def run_lightgbm(label, data_float, data_cat):
         'max_bin': 63,
     }
 
-    iter_time = time.time()
+    start_time = time.time()
 
-    gbm = lgb.train(params, lgb_train, num_boost_round=1000)
-    print(time.time() -  start_time)
+    gbm = lgb.train(params, data, num_boost_round=1000)
+    print(time.time() - start_time)
 
     return gbm.predict(data)
 
