@@ -18,11 +18,36 @@ def read_data():
     for item in cat_features:
         dtypes[item] = 'category'
 
-    data = pd.read_csv('data/day_0', nrows=40000000, sep='\t', header=None, names=names, dtype=dtypes)
+    data = pd.read_csv('data/day_0', nrows=30000000, sep='\t', header=None, names=names, dtype=dtypes)
 
     tmp_data = data[integer_features].values.astype(np.float32)
     tmp_data = np.where(np.isnan(tmp_data), -2., tmp_data)
     return data.label.values.astype(np.float32), tmp_data, data[cat_features].apply(lambda x: x.cat.codes + 1).values.astype(np.int32)
+
+def run_lightgbm(label, data_float, data_cat):
+    import lightgbm as lgb
+
+    data = lgb.Dataset(data=[data_float, data_cat], label=label)
+
+    params = {
+        'tree_learner': 'serial',
+        'task': 'train',
+        'objective': 'binary',
+        'min_data_in_leaf':0,
+        'min_sum_hessian_in_leaf':100,
+        'num_leaves': 255,
+        'learning_rate': 0.1,
+        'verbose': 1,
+        'device': 'gpu',
+        'max_bin': 63,
+    }
+
+    iter_time = time.time()
+
+    gbm = lgb.train(params, lgb_train, num_boost_round=1000)
+    print(time.time() -  start_time)
+
+    return gbm.predict(data)
 
 def run_arboretum(label, data_float, data_cat):
     import arboretum
@@ -42,7 +67,7 @@ def run_arboretum(label, data_float, data_cat):
         'tree':
         {
         'eta': 0.1,
-        'max_depth': = 8,
+        'max_depth': 8,
         'gamma': 0.0,
         'min_child_weight': 2,
         'min_leaf_size': 2,
