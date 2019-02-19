@@ -18,7 +18,7 @@ def read_data():
     for item in cat_features:
         dtypes[item] = 'category'
 
-    data = pd.read_csv('data/day_0', nrows=10000000, sep='\t', header=None, names=names, dtype=dtypes)
+    data = pd.read_csv('data/day_0', nrows=40000000, sep='\t', header=None, names=names, dtype=dtypes)
 
     tmp_data = data[integer_features].values.astype(np.float32)
     tmp_data = np.where(np.isnan(tmp_data), -2., tmp_data)
@@ -32,7 +32,7 @@ def run_arboretum(label, data_float, data_cat):
         'internals':
         {
         'double_precision': True,
-        'compute_overlap': 2 
+        'compute_overlap': 3 
         },
         'verbose':
         {
@@ -42,13 +42,13 @@ def run_arboretum(label, data_float, data_cat):
         'tree':
         {
         'eta': 0.1,
-        'max_depth': 10,
+        'max_depth': = 8,
         'gamma': 0.0,
         'min_child_weight': 2,
         'min_leaf_size': 2,
-        'colsample_bytree': 1.0,
-        'colsample_bylevel': 1.0,
-        'lambda': 0.0,
+        'colsample_bytree': 0.8,
+        'colsample_bylevel': 0.8,
+        'lambda': 0.1,
         'alpha': 0.0
         }})
 
@@ -59,7 +59,7 @@ def run_arboretum(label, data_float, data_cat):
     iter_time = time.time()
 
     # grow trees
-    for i in range(100):
+    for i in range(1000):
         model.grow_tree()
         print('next tree', time.time() - iter_time)
 
