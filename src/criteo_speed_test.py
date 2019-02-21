@@ -84,6 +84,52 @@ def run_arboretum(label, data_float, data_cat, label_test, data_float_test, data
 
     return model.predict(data), model.predict(data_test)
 
+def run_arboretum2(label, data_float, data_cat, label_test, data_float_test, data_cat_test):
+    import arboretum
+    import json
+
+    config = json.dumps({'objective':1, 
+        'internals':
+        {
+        'double_precision': True,
+        'compute_overlap': 3 
+        },
+        'verbose':
+        {
+        'gpu': True,
+        'data': True,
+        },
+        'tree':
+        {
+        'eta': 0.1,
+        'max_depth': 10,
+        'gamma': 0.0,
+        'min_child_weight': 8,
+        'min_leaf_size': 0,
+        'colsample_bytree': 0.8,
+        'colsample_bylevel': 0.8,
+        'lambda': 0.1,
+        'alpha': 0.0
+        }})
+
+    data_raw = np.concatenate([data_float, data_cat], axis=1)
+    data_test = np.concatenate([data_float_test, data_cat_test], axis=1)
+
+    data = arboretum.DMatrix(data_raw, y=label)
+
+    model = arboretum.Garden(config, data)
+
+    iter_time = time.time()
+
+    # grow trees
+    for i in range(500):
+        model.grow_tree()
+        print('next tree', time.time() - iter_time)
+
+    data_test = arboretum.DMatrix(data_test)
+
+    return model.predict(data), model.predict(data_test)
+
 def run_xgboost(label, data_float, data_cat, label_test, data_float_test, data_cat_test):
     import xgboost
 
@@ -123,6 +169,7 @@ if __name__ == '__main__':
 
     benchmarks = {
         'arboretum': run_arboretum,
+        'arboretum2': run_arboretum2,
         'lightgbm': run_lightgbm,
         'xgboost': run_xgboost,
     }
