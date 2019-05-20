@@ -2,6 +2,7 @@ import tensorflow as tf
 import pandas as pd
 import numpy as np
 import os
+from sklearn.utils import shuffle
 
 
 class FTFFM:
@@ -48,7 +49,7 @@ class FTFFM:
                             cat_idx = i - num_features
                             cat_size = min(cat_feature_sizes[i - num_features], max_category_size)
                             left = tf.gather(
-                                w_left, self.cat[:, cat_idx] % cat_size)
+                                w_left, (self.cat[:, cat_idx] + j) % cat_size)
 
                         if j < num_features:
                             right = w_right * self.num[:, j:j+1]
@@ -56,7 +57,7 @@ class FTFFM:
                             cat_idx = j - num_features
                             cat_size = min(cat_feature_sizes[j - num_features], max_category_size)
                             right = tf.gather(
-                                w_right, self.cat[:, cat_idx] % cat_size)
+                                w_right, (self.cat[:, cat_idx] + i) % cat_size)
 
                         print('{0}-{1} left {2} right {3}'.format(i, j, left.get_shape(), right.get_shape()))
                         # if verbose:
@@ -69,12 +70,12 @@ class FTFFM:
             self.y_pred = tf.sigmoid(r)
             # loss *= 0.001
             loss += tf.reduce_mean(tf.losses.sigmoid_cross_entropy(multi_class_labels=self.y, logits=r))
-            optimizer = tf.train.GradientDescentOptimizer(0.1)
-            gvs = optimizer.compute_gradients(loss)
-            capped_gvs = [(tf.clip_by_value(grad, -100., 100.), var) for grad, var in gvs]
-            self.train_step = optimizer.apply_gradients(capped_gvs)
-
-            # self.train_step = tf.train.GradientDescentOptimizer(0.0001).minimize(loss)
+            # optimizer = tf.train.GradientDescentOptimizer(0.1)
+            # gvs = optimizer.compute_gradients(loss)
+            # capped_gvs = [(tf.clip_by_value(grad, -100., 100.), var) for grad, var in gvs]
+            # self.train_step = optimizer.apply_gradients(capped_gvs)
+            optimizer = tf.train.AdadeltaOptimizer(1e-4)
+            self.train_step = optimizer.minimize(loss)
 
             tf.summary.scalar('loss', loss)
             self.merged = tf.summary.merge_all()
@@ -89,11 +90,12 @@ class FTFFM:
             self.saver = tf.train.Saver()
 
     def model_identifier(self):
-        return "FFM"
+        return "FFM_Adam"
 
     def train(self, y, num_features, cat_features, epoches = 100, batch = 10000):
         size = y.shape[0]
         for epoch in range(epoches):
+            y, num_features, cat_features = shuffle(y, num_features, cat_features)
             for batch_idx in range(size // batch):
                 _, score, summary = net.session.run([self.train_step, self.y_pred, self.merged], {
                     self.y: y[batch_idx*batch:(batch_idx+1)*batch], self.num: num_features[batch_idx*batch:(batch_idx+1)*batch],
