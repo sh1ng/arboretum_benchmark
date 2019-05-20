@@ -5,7 +5,8 @@ import os
 
 
 class FTFFM:
-    def __init__(self, num_features, cat_feature_sizes, k=10):
+    def __init__(self, num_features, cat_feature_sizes, k=10, max_category_size=1000000):
+        print(cat_feature_sizes)
         size = num_features + len(cat_feature_sizes)
         g = tf.Graph()
         with g.as_default():
@@ -24,7 +25,8 @@ class FTFFM:
                         if i < num_features:
                             shape = [1, k]
                         else:
-                            shape = [cat_feature_sizes[i - num_features], k]
+                            cat_size = min(cat_feature_sizes[i - num_features], max_category_size)
+                            shape = [cat_size, k]
                         w_left = tf.get_variable(
                             "{0}_{1}".format(i, j), shape=shape, dtype=tf.float32, initializer=tf.initializers.random_uniform(-0.01, 0.01))
                         self.weights.append(w_left)
@@ -32,7 +34,8 @@ class FTFFM:
                         if j < num_features:
                             shape = [1, k]
                         else:
-                            shape = [cat_feature_sizes[j-num_features], k]
+                            cat_size = min(cat_feature_sizes[j - num_features], max_category_size)
+                            shape = [cat_size, k]
                         w_right = tf.get_variable(
                             "{1}_{0}".format(i, j), shape=shape, dtype=tf.float32, initializer=tf.initializers.random_uniform(-0.01, 0.01))
                         self.weights.append(w_left)
@@ -43,7 +46,7 @@ class FTFFM:
                             # [1, k] * [:]
                         else:
                             cat_idx = i - num_features
-                            cat_size = cat_feature_sizes[cat_idx]
+                            cat_size = min(cat_feature_sizes[i - num_features], max_category_size)
                             left = tf.gather(
                                 w_left, self.cat[:, cat_idx] % cat_size)
 
@@ -51,7 +54,7 @@ class FTFFM:
                             right = w_right * self.num[:, j:j+1]
                         else:
                             cat_idx = j - num_features
-                            cat_size = cat_feature_sizes[cat_idx]
+                            cat_size = min(cat_feature_sizes[j - num_features], max_category_size)
                             right = tf.gather(
                                 w_right, self.cat[:, cat_idx] % cat_size)
 
@@ -105,5 +108,5 @@ if __name__ == '__main__':
     cat_features = df[cat_features_names].apply(lambda x: x.cat.codes + 1)
     cat_sizes = np.max(cat_features.values, axis=0).tolist()
 
-    net = FTFFM(len(num_features_names), cat_sizes)
+    net = FTFFM(len(num_features_names), cat_sizes, max_category_size=100000)
     net.train(df.label.values, num_features, cat_features, epoches=100, batch=10000)
