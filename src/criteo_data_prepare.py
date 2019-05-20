@@ -16,7 +16,7 @@ def read_data(idx):
     for item in cat_features:
         dtypes[item] = 'category'
 
-    data = pd.read_csv('data/day_{0}.gz'.format(idx), nrows=100000,
+    data = pd.read_csv('data/day_{0}.gz'.format(idx), nrows=10000000,
                        sep='\t', header=None, names=names, dtype=dtypes)
 
     print('reading is done....')
