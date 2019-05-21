@@ -12,6 +12,7 @@ import random
 class FTFFM2:
     def __init__(self, num_features, num_cat_feature, k=8, category_size=1000000, seed=0, batch_size=50000):
         self.batch_size = batch_size
+        self.k = k
         random.seed(seed)
         # print(cat_feature_sizes)
         size = num_features + num_cat_feature
@@ -146,12 +147,13 @@ class FTFFM2:
             self.saver = tf.train.Saver()
 
     def model_identifier(self):
-        return "FFM2"
+        return "FFM2_{0}".format(self.k)
 
-    def train(self, files, epoches = 100):
+    def train(self, train_files, epoches = 100):
         step = 0
         for epoch in range(epoches):
-            for file in files:
+            for file in train_files:
+                print("processing file", file)
                 self.session.run(self.it.initializer, feed_dict={self.file: file})
                 try:
                     while True:
