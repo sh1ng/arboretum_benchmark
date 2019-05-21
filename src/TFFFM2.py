@@ -49,33 +49,35 @@ class FTFFM2:
                 field_delim="\t",
                 na_value='',
                 header=False,
-                # 1 Gb buffer
-                buffer_size=8000000000)
+                # 100Mb buffer
+                buffer_size=800000000)
 
             def hash_string(s):
                 return tf.strings.to_hash_bucket_fast(s, 1 << 31)
 
-            def transform(labmda, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13,
+            def transform(label, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13,
                           c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15,
                           c16, c17, c18, c19, c20, c21, c22, c23, c24, c25, c26):
-                return labmda, tf.stack([f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13]), \
+                return label, tf.stack([f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13], axis=1), \
                        tf.stack([hash_string(c1), hash_string(c2), hash_string(c3), hash_string(c4), hash_string(c5),
                                  hash_string(c6), hash_string(c7), hash_string(c8), hash_string(c9), hash_string(c10),
                                  hash_string(c11), hash_string(c12), hash_string(c13), hash_string(c14),
                                  hash_string(c15), hash_string(c16), hash_string(c17), hash_string(c18),
                                  hash_string(c19), hash_string(c20), hash_string(c21), hash_string(c22),
-                                 hash_string(c23), hash_string(c24), hash_string(c25), hash_string(c26)])
-
+                                 hash_string(c23), hash_string(c24), hash_string(c25), hash_string(c26)], axis=1)
 
             dataset = dataset.shuffle(batch_size * 5)
-            dataset = dataset.map(transform)
             dataset = dataset.batch(batch_size)
+            dataset = dataset.map(transform)
             dataset = dataset.prefetch(batch_size)
+            
             self.it = dataset.make_initializable_iterator()
 
 
             y, num, cat = self.it.get_next()
 
+
+            print(num, cat)
             r = tf.zeros_like(y)
             loss = 0
             with tf.variable_scope('weights'):
