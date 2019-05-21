@@ -66,11 +66,13 @@ class FTFFM2:
                                  hash_string(c19), hash_string(c20), hash_string(c21), hash_string(c22),
                                  hash_string(c23), hash_string(c24), hash_string(c25), hash_string(c26)])
 
-            dataset = dataset.map(transform)
+
             dataset = dataset.shuffle(batch_size * 5)
-            dataset = dataset.prefetch(batch_size)
+            dataset = dataset.map(transform)
             dataset = dataset.batch(batch_size)
+            dataset = dataset.prefetch(batch_size)
             self.it = dataset.make_initializable_iterator()
+
 
             y, num, cat = self.it.get_next()
 
