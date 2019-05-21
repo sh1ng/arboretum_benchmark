@@ -3,60 +3,63 @@ import pandas as pd
 import numpy as np
 import os
 from sklearn.utils import shuffle
+import random
 
-
-class FTFFM:
-    def __init__(self, num_features, cat_feature_sizes, k=10, max_category_size=1000000):
-        print(cat_feature_sizes)
-        size = num_features + len(cat_feature_sizes)
+class FTFFM_hashing:
+    def __init__(self, num_features, num_cat_feature, k=10, category_size=1000000, seed=0):
+        random.seed(seed)
+        # print(cat_feature_sizes)
+        size = num_features + num_cat_feature
         g = tf.Graph()
         with g.as_default():
             self.num = tf.placeholder(
                 dtype=tf.float32, shape=[None, num_features])
             self.cat = tf.placeholder(dtype=tf.int32, shape=[
-                                      None, len(cat_feature_sizes)])
+                                      None, num_cat_feature])
             self.y = tf.placeholder(dtype=tf.float32, shape=[None])
             r = tf.zeros_like(self.y)
             loss = 0
             with tf.variable_scope('weights'):
                 self.weights = []
+                w = tf.get_variable(
+                            "w_cat", shape=[category_size, k], dtype=tf.float32, initializer=tf.initializers.random_uniform(-0.01, 0.01))
+                self.weights.append(w)
                 for i in range(size):
                     for j in range(i + 1, size):
                         # shape = None
                         if i < num_features:
                             shape = [1, k]
+                            w_left = tf.get_variable(
+                                "{0}_{1}".format(i, j), shape=shape, dtype=tf.float32,
+                                initializer=tf.initializers.random_uniform(-0.01, 0.01))
+                            self.weights.append(w_left)
                         else:
-                            cat_size = min(cat_feature_sizes[i - num_features], max_category_size)
-                            shape = [cat_size, k]
-                        w_left = tf.get_variable(
-                            "{0}_{1}".format(i, j), shape=shape, dtype=tf.float32, initializer=tf.initializers.random_uniform(-0.01, 0.01))
-                        self.weights.append(w_left)
+                            w_left = w
 
                         if j < num_features:
                             shape = [1, k]
+                            w_right = tf.get_variable(
+                                "{1}_{0}".format(i, j), shape=shape, dtype=tf.float32,
+                                initializer=tf.initializers.random_uniform(-0.01, 0.01))
+                            self.weights.append(w_right)
                         else:
-                            cat_size = min(cat_feature_sizes[j - num_features], max_category_size)
-                            shape = [cat_size, k]
-                        w_right = tf.get_variable(
-                            "{1}_{0}".format(i, j), shape=shape, dtype=tf.float32, initializer=tf.initializers.random_uniform(-0.01, 0.01))
-                        self.weights.append(w_right)
+                            w_right = w
+
 
                         if i < num_features:
                             left = w_left *  self.num[:, i:i+1]
                             # [1, k] * [:]
                         else:
                             cat_idx = i - num_features
-                            cat_size = min(cat_feature_sizes[i - num_features], max_category_size)
                             left = tf.gather(
-                                w_left, (self.cat[:, cat_idx] + j) % cat_size)
+                                w_left, (self.cat[:, cat_idx] + random.randrange(2^31)) % category_size)
 
                         if j < num_features:
                             right = w_right * self.num[:, j:j+1]
                         else:
                             cat_idx = j - num_features
-                            cat_size = min(cat_feature_sizes[j - num_features], max_category_size)
                             right = tf.gather(
-                                w_right, (self.cat[:, cat_idx] + i) % cat_size)
+                                w_right, (self.cat[:, cat_idx] + random.randrange(2^31)) % category_size)
 
                         print('{0}-{1} left {2} right {3}'.format(i, j, left.get_shape(), right.get_shape()))
                         # if verbose:
@@ -89,7 +92,7 @@ class FTFFM:
             self.saver = tf.train.Saver()
 
     def model_identifier(self):
-        return "FFM_Adam"
+        return "FFM_hashing"
 
     def train(self, y, num_features, cat_features, epoches = 100, batch = 10000):
         size = y.shape[0]
@@ -109,5 +112,5 @@ if __name__ == '__main__':
     cat_features = df[cat_features_names].apply(lambda x: x.cat.codes + 1)
     cat_sizes = np.max(cat_features.values, axis=0).tolist()
 
-    net = FTFFM(len(num_features_names), cat_sizes, max_category_size=100000)
+    net = FTFFM_hashing(len(num_features_names), len(cat_sizes), category_size=100000)
     net.train(df.label.values, num_features, cat_features, epoches=100, batch=10000)
