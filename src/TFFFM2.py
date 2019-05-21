@@ -53,11 +53,12 @@ class FTFFM2:
                 buffer_size=800000000)
 
             def hash_string(s):
-                return tf.strings.to_hash_bucket_fast(s, 1 << 31)
+                return tf.cast(tf.strings.to_hash_bucket_fast(s, 1 << 31), tf.int32)
 
             def transform(label, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13,
                           c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15,
                           c16, c17, c18, c19, c20, c21, c22, c23, c24, c25, c26):
+
                 return label, tf.stack([f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13], axis=1), \
                        tf.stack([hash_string(c1), hash_string(c2), hash_string(c3), hash_string(c4), hash_string(c5),
                                  hash_string(c6), hash_string(c7), hash_string(c8), hash_string(c9), hash_string(c10),
@@ -66,10 +67,23 @@ class FTFFM2:
                                  hash_string(c19), hash_string(c20), hash_string(c21), hash_string(c22),
                                  hash_string(c23), hash_string(c24), hash_string(c25), hash_string(c26)], axis=1)
 
+            def transform1(label, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13,
+                          c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15,
+                          c16, c17, c18, c19, c20, c21, c22, c23, c24, c25, c26):
+                print(label, f1, c1)
+                return label, [f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13], \
+                       [hash_string(c1), hash_string(c2), hash_string(c3), hash_string(c4), hash_string(c5),
+                                 hash_string(c6), hash_string(c7), hash_string(c8), hash_string(c9), hash_string(c10),
+                                 hash_string(c11), hash_string(c12), hash_string(c13), hash_string(c14),
+                                 hash_string(c15), hash_string(c16), hash_string(c17), hash_string(c18),
+                                 hash_string(c19), hash_string(c20), hash_string(c21), hash_string(c22),
+                                 hash_string(c23), hash_string(c24), hash_string(c25), hash_string(c26)]
+
+
             # dataset = dataset.shuffle(batch_size * 5)
             dataset = dataset.batch(batch_size)
-            dataset = dataset.map(transform, tf.data.experimental.AUTOTUNE)
-            dataset = dataset.prefetch(batch_size)
+            dataset = dataset.map(transform1, tf.data.experimental.AUTOTUNE)
+            dataset = dataset.prefetch(1)
 
             self.it = dataset.make_initializable_iterator()
 
@@ -108,19 +122,19 @@ class FTFFM2:
 
 
                         if i < num_features:
-                            left = w_left * num[:, i:i+1]
+                            left = w_left * num[i]
                             # [1, k] * [:]
                         else:
                             cat_idx = i - num_features
                             left = tf.gather(
-                                w_left, (cat[:, cat_idx] + random.randrange(1 << 31)) % category_size)
+                                w_left, (cat[cat_idx] + random.randrange(1 << 31)) % category_size)
 
                         if j < num_features:
-                            right = w_right * num[:, j:j+1]
+                            right = w_right * num[j]
                         else:
                             cat_idx = j - num_features
                             right = tf.gather(
-                                w_right, (cat[:, cat_idx] + random.randrange(1 << 31)) % category_size)
+                                w_right, (cat[cat_idx] + random.randrange(1 << 31)) % category_size)
 
                         print('{0}-{1} left {2} right {3}'.format(i, j, left.get_shape(), right.get_shape()))
                         # if verbose:
