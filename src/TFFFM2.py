@@ -48,7 +48,9 @@ class FTFFM2:
 
                 field_delim="\t",
                 na_value='',
-                header=False)
+                header=False,
+                # 1 Gb buffer
+                buffer_size=8000000000)
 
             def hash_string(s):
                 return tf.strings.to_hash_bucket_fast(s, 1 << 31)
@@ -157,5 +159,5 @@ class FTFFM2:
                     pass
 
 if __name__ == '__main__':
-    net = FTFFM2(13, 26, category_size=100000)
+    net = FTFFM2(13, 26, category_size=1000000)
     net.train(['../data/day_0.gz'])
