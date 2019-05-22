@@ -1,8 +1,5 @@
 import tensorflow as tf
-import pandas as pd
-import numpy as np
 import os
-from sklearn.utils import shuffle
 import random
 
 # tf.enable_eager_execution()
