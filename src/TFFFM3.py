@@ -18,6 +18,8 @@ class FTFFM3:
         g = tf.Graph()
         with g.as_default():
             self.file = tf.placeholder(tf.string)
+            self.skip = tf.placeholder(tf.int32)
+            self.take = tf.placeholder(tf.int32)
             dataset = tf.data.experimental.CsvDataset(
                 filenames=self.file,
                 compression_type=compression_type,
@@ -67,7 +69,7 @@ class FTFFM3:
                                  hash_string(c19), hash_string(c20), hash_string(c21), hash_string(c22),
                                  hash_string(c23), hash_string(c24), hash_string(c25), hash_string(c26)])
 
-            dataset = dataset.shuffle(batch_size)
+            dataset = dataset.skip(self.skip).take(self.take).shuffle(batch_size)
             dataset = dataset.apply(tf.contrib.data.map_and_batch(
                 map_func=transform, batch_size=batch_size))
 
@@ -159,7 +161,7 @@ class FTFFM3:
         for epoch in range(epoches):
             for file in train_files:
                 print("processing file", file)
-                self.session.run(self.it.initializer, feed_dict={self.file: file})
+                self.session.run(self.it.initializer, feed_dict={self.file: file, self.skip:0, self.take:(45840617-6040618)})
                 try:
                     while True:
                         _, summary = net.session.run([self.train_step, self.merged])
@@ -172,7 +174,7 @@ class FTFFM3:
 
             for file in cv_files:
                 print("processing file", file)
-                self.session.run(self.it.initializer, feed_dict={self.file: file})
+                self.session.run(self.it.initializer, feed_dict={self.file: file, self.skip:(45840617-6040618), self.take:(45840617-6040618)})
                 try:
                     while True:
                         loss = net.session.run([self.loss])
@@ -187,4 +189,4 @@ class FTFFM3:
 if __name__ == '__main__':
     net = FTFFM3(13, 26, category_size=5000000, k=16, batch_size=10000)
     # net.train(['../data/day_0.gz', '../data/day_1.gz', '../data/day_2.gz', '../data/day_3.gz', '../data/day_4.gz', '../data/day_5.gz', '../data/day_6.gz'], ['../data/day_7.gz'])
-    net.train(['../dac/train.txt'], ['../dac/test.txt'])
+    net.train(['../dac/train.txt'], ['../dac/train.txt'])
