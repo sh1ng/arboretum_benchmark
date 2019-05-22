@@ -1,6 +1,7 @@
 import tensorflow as tf
 import os
 import random
+import numpy as np
 
 # tf.enable_eager_execution()
 
@@ -77,7 +78,7 @@ class FTFFM2:
             y, num, cat = self.it.get_next()
 
             r = tf.zeros_like(y)
-            loss = 0
+            self.loss = 0
             with tf.variable_scope('weights'):
                 self.weights = []
                 w = tf.get_variable(
@@ -128,11 +129,11 @@ class FTFFM2:
                         # r = tf.Print(r, [i, j, r, left, right, w_left, w_right])
 
             self.y_pred = tf.sigmoid(r)
-            loss += tf.reduce_mean(tf.losses.sigmoid_cross_entropy(multi_class_labels=y, logits=r))
+            self.loss += tf.reduce_mean(tf.losses.sigmoid_cross_entropy(multi_class_labels=y, logits=r))
             optimizer = tf.train.AdamOptimizer(1e-5)
-            self.train_step = optimizer.minimize(loss)
+            self.train_step = optimizer.minimize(self.loss)
 
-            tf.summary.scalar('loss', loss)
+            tf.summary.scalar('loss', self.loss)
             self.merged = tf.summary.merge_all()
 
             self.session = tf.Session(graph=g)
@@ -145,9 +146,9 @@ class FTFFM2:
             self.saver = tf.train.Saver()
 
     def model_identifier(self):
-        return "FFM2_k_{0}_category_size_{1}".format(self.k, self.category_size)
+        return "FFM2_k_{0}_buckets_{1}k_bs_{2}".format(self.k, self.category_size // 1000, self.batch_size)
 
-    def train(self, train_files, epoches = 100):
+    def train(self, train_files, cv_files, epoches = 100):
         step = 0
         for epoch in range(epoches):
             for file in train_files:
@@ -161,6 +162,21 @@ class FTFFM2:
                 except tf.errors.OutOfRangeError:
                     pass
 
+            cv_logloss = []
+
+            for file in cv_files:
+                print("processing file", file)
+                self.session.run(self.it.initializer, feed_dict={self.file: file})
+                try:
+                    while True:
+                        loss = net.session.run([self.loss])
+                        cv_logloss.append(loss)
+                except tf.errors.OutOfRangeError:
+                    pass
+
+            self.summary_writer.add_summary(tf.summary.scalar('cv_logloss', np.mean(cv_logloss)), epoch + 1)
+
+
 if __name__ == '__main__':
     net = FTFFM2(13, 26, category_size=1000000, k=16, batch_size=25000)
-    net.train(['../data/day_0.gz'])
+    net.train(['../data/day_0.gz', '../data/day_1.gz', '../data/day_2.gz', '../data/day_3.gz', '../data/day_4.gz', '../data/day_5.gz', '../data/day_6.gz'], ['../data/day_7.gz'])
