@@ -179,8 +179,9 @@ class FTFFM3:
                         cv_logloss.append(loss)
                 except tf.errors.OutOfRangeError:
                     pass
-
-            self.summary_writer.add_summary(tf.summary.scalar('cv_logloss', np.mean(cv_logloss)), epoch + 1)
+            summary = tf.Summary(value=[tf.Summary.Value(tag='cv_logloss',
+                                                         simple_value=np.mean(cv_logloss))])
+            self.summary_writer.add_summary(summary, epoch + 1)
 
 
 if __name__ == '__main__':
