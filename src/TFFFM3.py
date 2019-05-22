@@ -8,7 +8,7 @@ import numpy as np
 
 
 class FTFFM3:
-    def __init__(self, num_features, num_cat_feature, k=8, category_size=1000000, seed=0, batch_size=50000):
+    def __init__(self, num_features, num_cat_feature, k=8, category_size=1000000, seed=0, batch_size=50000, compression_type=None):
         self.batch_size = batch_size
         self.k = k
         self.category_size = category_size
@@ -20,7 +20,7 @@ class FTFFM3:
             self.file = tf.placeholder(tf.string)
             dataset = tf.data.experimental.CsvDataset(
                 filenames=self.file,
-                compression_type='GZIP',
+                compression_type=compression_type,
                 record_defaults=[tf.float32,  # label
                                  # float
                                  tf.constant([0.0], dtype=tf.float32), tf.constant([0.0], dtype=tf.float32),
@@ -185,4 +185,5 @@ class FTFFM3:
 
 if __name__ == '__main__':
     net = FTFFM3(13, 26, category_size=5000000, k=16, batch_size=10000)
-    net.train(['../data/day_0.gz', '../data/day_1.gz', '../data/day_2.gz', '../data/day_3.gz', '../data/day_4.gz', '../data/day_5.gz', '../data/day_6.gz'], ['../data/day_7.gz'])
+    # net.train(['../data/day_0.gz', '../data/day_1.gz', '../data/day_2.gz', '../data/day_3.gz', '../data/day_4.gz', '../data/day_5.gz', '../data/day_6.gz'], ['../data/day_7.gz'])
+    net.train(['../dac/train.txt'], ['../dac/test.txt'])
