@@ -10,6 +10,7 @@ class FTFFM2:
     def __init__(self, num_features, num_cat_feature, k=8, category_size=1000000, seed=0, batch_size=50000):
         self.batch_size = batch_size
         self.k = k
+        self.category_size = category_size
         random.seed(seed)
         # print(cat_feature_sizes)
         size = num_features + num_cat_feature
@@ -144,7 +145,7 @@ class FTFFM2:
             self.saver = tf.train.Saver()
 
     def model_identifier(self):
-        return "FFM2_{0}".format(self.k)
+        return "FFM2_k_{0}_category_size_{1}".format(self.k, self.category_size)
 
     def train(self, train_files, epoches = 100):
         step = 0
