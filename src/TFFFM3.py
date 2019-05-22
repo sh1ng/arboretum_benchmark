@@ -18,8 +18,8 @@ class FTFFM3:
         g = tf.Graph()
         with g.as_default():
             self.file = tf.placeholder(tf.string)
-            self.skip = tf.placeholder(tf.int32)
-            self.take = tf.placeholder(tf.int32)
+            self.skip = tf.placeholder(tf.int64)
+            self.take = tf.placeholder(tf.int64)
             dataset = tf.data.experimental.CsvDataset(
                 filenames=self.file,
                 compression_type=compression_type,
@@ -154,7 +154,7 @@ class FTFFM3:
             self.saver = tf.train.Saver()
 
     def model_identifier(self):
-        return "FFM3_k_{0}_buckets_{1}k_bs_{2}".format(self.k, self.category_size // 1000, self.batch_size)
+        return "FFM3_k_{0}_buckets_{1}k_bs_{2}_criteo_43M".format(self.k, self.category_size // 1000, self.batch_size)
 
     def train(self, train_files, cv_files, epoches = 100):
         step = 0
@@ -174,7 +174,7 @@ class FTFFM3:
 
             for file in cv_files:
                 print("processing file", file)
-                self.session.run(self.it.initializer, feed_dict={self.file: file, self.skip:(45840617-6040618), self.take:(45840617-6040618)})
+                self.session.run(self.it.initializer, feed_dict={self.file: file, self.skip:(45840617-6040618), self.take:-1})
                 try:
                     while True:
                         loss = net.session.run([self.loss])
@@ -189,4 +189,4 @@ class FTFFM3:
 if __name__ == '__main__':
     net = FTFFM3(13, 26, category_size=5000000, k=16, batch_size=10000)
     # net.train(['../data/day_0.gz', '../data/day_1.gz', '../data/day_2.gz', '../data/day_3.gz', '../data/day_4.gz', '../data/day_5.gz', '../data/day_6.gz'], ['../data/day_7.gz'])
-    net.train(['../dac/train.txt'], ['../dac/train.txt'])
+    net.train(['../data/dac/train.txt'], ['../data/dac/train.txt'])
