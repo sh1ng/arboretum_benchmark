@@ -33,7 +33,7 @@ class FTFFM3:
                 return tmp['label'], tmp['numerics'], tf.cast(tmp['categories'], tf.int32)
 
 
-            dataset = dataset.shuffle(batch_size).map(_parse_function)
+            dataset = dataset.shuffle(batch_size).map(_parse_function, tf.data.experimental.AUTOTUNE)
             dataset = dataset.batch(batch_size)
             dataset = dataset.prefetch(1)
 
