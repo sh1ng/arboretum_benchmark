@@ -5,6 +5,7 @@ from sklearn.preprocessing import LabelEncoder, MinMaxScaler
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.callbacks import TensorBoard
+import gc
 
 from DeepFM import DeepFM
 
@@ -25,10 +26,10 @@ if __name__ == "__main__":
     for item in cat_feature_names:
         dtypes[item] = 'category'
 
-    file = '../../arboretum_benchmark/data/dac/train.txt'
+    file = '../data/dac/train.txt'
 
     data = pd.read_csv(file,
-                       sep='\t', header=None, names=names, dtype=dtypes, nrows=100000)
+                       sep='\t', header=None, names=names, dtype=dtypes)
 
     cat_features = []
     threshold = 4
@@ -43,6 +44,7 @@ if __name__ == "__main__":
         cat_features.append([col, len(u)])
 
         print('removed low freq<{0} categories {1}-{2}'.format(threshold, col, original - len(u)))
+        gc.collect()
 
     data[numerical_feature_names].fillna(0, inplace=True)
 
