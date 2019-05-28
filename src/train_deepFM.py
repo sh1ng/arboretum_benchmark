@@ -6,7 +6,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras.callbacks import TensorBoard
 
-from src.DeepFM import DeepFM
+from DeepFM import DeepFM
 
 if __name__ == "__main__":
 
@@ -31,7 +31,7 @@ if __name__ == "__main__":
                        sep='\t', header=None, names=names, dtype=dtypes, nrows=100000)
 
     cat_features = []
-    threshold = 5
+    threshold = 4
     for col in cat_feature_names:
         u, inverse, count = np.unique(data[col].cat.codes, return_counts=True, return_inverse=True)
         original = len(u)
@@ -44,7 +44,7 @@ if __name__ == "__main__":
 
         print('removed low freq<{0} categories {1}-{2}'.format(threshold, col, original - len(u)))
 
-    data[numerical_feature_names] = data[numerical_feature_names].fillna(0, )
+    data[numerical_feature_names].fillna(0, inplace=True)
 
     target = ['label']
 
@@ -67,4 +67,5 @@ if __name__ == "__main__":
     input = train_model_cat_input + train_model_numerical_input
 
     history = model.keras_model.fit(input, train_target,
-                        batch_size=256, epochs=10, verbose=2, validation_split=0.2, callbacks=[tensorboard])
+                        batch_size=256, epochs=10, verbose=2, validation_split=0.2, callbacks=[tensorboard],
+                                    use_multiprocessing=True, workers=8)
