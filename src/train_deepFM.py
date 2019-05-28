@@ -46,7 +46,7 @@ if __name__ == "__main__":
         print('removed low freq<{0} categories {1}-{2}'.format(threshold, col, original - len(u)))
         gc.collect()
 
-    data[numerical_feature_names].fillna(0, inplace=True)
+        data[numerical_feature_names] = data[numerical_feature_names].fillna(0)
 
     target = ['label']
 
@@ -54,9 +54,9 @@ if __name__ == "__main__":
     data[numerical_feature_names] = mms.fit_transform(data[numerical_feature_names]).astype(np.float32)
     gc.collect()
 
-    model = DeepFM(numerical_feature_names, cat_features, embedding_size=8)
+    model = DeepFM(numerical_feature_names, cat_features, embedding_size=16, l2_embedding=1e-4, l2_reg_dnn=1e-5)
     print('training...', model.model_identity())
-    model.keras_model.compile(tf.keras.optimizers.Adam(1e-4), "binary_crossentropy",
+    model.keras_model.compile(tf.keras.optimizers.Adam(1e-3), "binary_crossentropy",
                   metrics=['binary_crossentropy'], )
 
     tensorboard = TensorBoard(log_dir="logs/{0}".format(model.model_identity()))
@@ -67,5 +67,5 @@ if __name__ == "__main__":
 
     input = train_model_cat_input + train_model_numerical_input
 
-    history = model.keras_model.fit(input, train_target,
+    model.keras_model.fit(input, train_target,
                         batch_size=1024*4, epochs=10, verbose=2, validation_split=0.2, callbacks=[tensorboard])

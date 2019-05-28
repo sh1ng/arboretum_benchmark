@@ -3,7 +3,7 @@ import tensorflow.keras as keras
 import tensorflow as tf
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.initializers import Zeros, glorot_normal
-from tensorflow.python.keras.layers import Layer
+from tensorflow.python.keras.layers import Layer, Activation
 from tensorflow.python.keras.regularizers import l2
 
 
@@ -147,10 +147,12 @@ class DeepFM:
 
         logit = keras.layers.add([deep_logit, fm_out])
 
-        self.keras_model = tf.keras.models.Model(cat_input + numerical_input, outputs=logit)
+        predictions = keras.layers.Dense(1, activation='sigmoid', use_bias=False)(logit)
+
+        self.keras_model = tf.keras.models.Model(cat_input + numerical_input, outputs=predictions)
 
     def model_identity(self):
-        name = 'DNN_emb_{0}_l2_emb_{1}_l2_dnn_{2}_dnn'.format(self.embedding_size, self.l2_reg_embedding, self.l2_reg_embedding)
+        name = 'DNN_emb_{0}_l2_emb_{1}_l2_dnn_{2}_dnn'.format(self.embedding_size, self.l2_reg_embedding, self.l2_reg_dnn)
         for l in self.dnn_size:
             name += "_{0}".format(l)
 
