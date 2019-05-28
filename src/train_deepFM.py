@@ -29,7 +29,7 @@ if __name__ == "__main__":
     file = '../data/dac/train.txt'
 
     data = pd.read_csv(file,
-                       sep='\t', header=None, names=names, dtype=dtypes, nrows=10000000)
+                       sep='\t', header=None, names=names, dtype=dtypes)
 
     cat_features = []
     threshold = 4
