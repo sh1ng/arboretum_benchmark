@@ -50,10 +50,9 @@ if __name__ == "__main__":
 
     target = ['label']
 
-    numerical_features = [[x] for x in numerical_feature_names]
     mms = MinMaxScaler(feature_range=(0, 1))
     data[numerical_feature_names] = mms.fit_transform(data[numerical_feature_names]).astype(np.float32)
-    model_input = data[numerical_feature_names]
+    gc.collect()
 
     model = DeepFM(numerical_feature_names, cat_features, embedding_size=8)
     print('training...', model.model_identity())
