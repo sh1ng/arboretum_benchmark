@@ -56,7 +56,7 @@ if __name__ == "__main__":
 
     model = DeepFM(numerical_feature_names, cat_features, embedding_size=8)
     print('training...', model.model_identity())
-    model.keras_model.compile(tf.keras.optimizers.Adam(1e-3), "binary_crossentropy",
+    model.keras_model.compile(tf.keras.optimizers.Adam(1e-4), "binary_crossentropy",
                   metrics=['binary_crossentropy'], )
 
     tensorboard = TensorBoard(log_dir="logs/{0}".format(model.model_identity()))
@@ -68,5 +68,4 @@ if __name__ == "__main__":
     input = train_model_cat_input + train_model_numerical_input
 
     history = model.keras_model.fit(input, train_target,
-                        batch_size=256, epochs=10, verbose=2, validation_split=0.2, callbacks=[tensorboard],
-                                    use_multiprocessing=True, workers=8)
+                        batch_size=1024*4, epochs=10, verbose=2, validation_split=0.2, callbacks=[tensorboard])
