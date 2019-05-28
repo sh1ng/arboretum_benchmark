@@ -54,7 +54,7 @@ if __name__ == "__main__":
     data[numerical_feature_names] = mms.fit_transform(data[numerical_feature_names]).astype(np.float32)
     gc.collect()
 
-    model = DeepNFM(numerical_feature_names, cat_features, embedding_size=16, l2_embedding=1e-5, l2_reg_dnn=1e-5)
+    model = DeepFM(numerical_feature_names, cat_features, embedding_size=8, l2_embedding=1e-5, l2_reg_dnn=1e-5, dnn_size=(256,256,256))
     print('training...', model.model_identity())
     model.keras_model.compile(tf.keras.optimizers.Adam(1e-3), "binary_crossentropy",
                   metrics=['binary_crossentropy'], )
