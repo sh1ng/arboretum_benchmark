@@ -7,7 +7,7 @@ import tensorflow as tf
 from tensorflow.keras.callbacks import TensorBoard
 import gc
 
-from DeepFM import DeepFM
+from DeepFM import DeepFM, DeepNFM
 
 if __name__ == "__main__":
 
@@ -29,7 +29,7 @@ if __name__ == "__main__":
     file = '../data/dac/train.txt'
 
     data = pd.read_csv(file,
-                       sep='\t', header=None, names=names, dtype=dtypes)
+                       sep='\t', header=None, names=names, dtype=dtypes, nrows=10000000)
 
     cat_features = []
     threshold = 4
@@ -54,7 +54,7 @@ if __name__ == "__main__":
     data[numerical_feature_names] = mms.fit_transform(data[numerical_feature_names]).astype(np.float32)
     gc.collect()
 
-    model = DeepFM(numerical_feature_names, cat_features, embedding_size=16, l2_embedding=1e-4, l2_reg_dnn=1e-5)
+    model = DeepNFM(numerical_feature_names, cat_features, embedding_size=16, l2_embedding=1e-5, l2_reg_dnn=1e-5)
     print('training...', model.model_identity())
     model.keras_model.compile(tf.keras.optimizers.Adam(1e-3), "binary_crossentropy",
                   metrics=['binary_crossentropy'], )
