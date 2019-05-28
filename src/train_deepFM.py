@@ -68,4 +68,4 @@ if __name__ == "__main__":
     input = train_model_cat_input + train_model_numerical_input
 
     model.keras_model.fit(input, train_target,
-                        batch_size=1024*4, epochs=10, verbose=2, validation_split=0.2, callbacks=[tensorboard])
+                        batch_size=1024*4, epochs=20, verbose=2, validation_split=0.2, callbacks=[tensorboard])
