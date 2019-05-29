@@ -343,12 +343,13 @@ class DeepFM:
 
 
 class exDeepFM:
-    def __init__(self, numerical_features, cat_features, embedding_size, cin_size, dnn_size, dnn_activation=keras.activations.relu, l2_reg_dnn=0.0,
+    def __init__(self, numerical_features, cat_features, embedding_size, cin_size, dnn_size, dnn_activation=keras.activations.relu, l2_reg_dnn=0.0, l2_reg_cin=1e-5,
                  l2_embedding=1e-4, seed=0, init_std=0.01):
         self.dnn_size=dnn_size
         self.cin_size = cin_size
         self.l2_reg_dnn =l2_reg_dnn
         self.l2_reg_embedding = l2_embedding
+        self.l2_reg_cin = l2_reg_cin
         self.embedding_size = embedding_size
 
         numerical_input = list(map(lambda x: keras.layers.Input(shape=(1,), name='numerical_{0}'.format(x), dtype=tf.float32), numerical_features))
@@ -375,7 +376,7 @@ class exDeepFM:
 
         concat = keras.layers.Concatenate(axis=1)(embeding_input)
 
-        cin_out = CIN(cin_size, keras.activations.relu)(concat)
+        cin_out = CIN(cin_size, keras.activations.relu, l2_reg=l2_reg_cin)(concat)
         deep_input = tf.keras.layers.Flatten()(concat)
 
         self.dnn = DNN(dnn_size, dnn_activation, l2_reg_dnn)
@@ -391,7 +392,7 @@ class exDeepFM:
         self.keras_model = tf.keras.models.Model(cat_input + numerical_input, outputs=predictions)
 
     def model_identity(self):
-        name = 'exDNN_emb_{0}_l2_emb_{1}_l2_dnn_{2}_dnn'.format(self.embedding_size, self.l2_reg_embedding, self.l2_reg_dnn)
+        name = 'exDNN_emb_{0}_l2_emb_{1}_l2_dnn_{2}_l2_cin_{3}_dnn'.format(self.embedding_size, self.l2_reg_embedding, self.l2_reg_dnn, self.l2_reg_cin)
         for l in self.dnn_size:
             name += "_{0}".format(l)
 
