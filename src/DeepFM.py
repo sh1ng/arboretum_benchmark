@@ -154,12 +154,13 @@ class NFM(Layer):
 
 
 class DeepFM:
-    def __init__(self, numerical_features, cat_features, embedding_size, dnn_size=(128, 128), dnn_activation=keras.activations.relu, l2_reg_dnn=0.0,
+    def __init__(self, numerical_features, cat_features, embedding_size, embedding_blocks=1,  dnn_size=(128, 128), dnn_activation=keras.activations.relu, l2_reg_dnn=0.0,
                  l2_embedding=1e-4, seed=0, init_std=0.01):
         self.dnn_size=dnn_size
         self.l2_reg_dnn =l2_reg_dnn
         self.l2_reg_embedding = l2_embedding
         self.embedding_size = embedding_size
+        self.embedding_blocks = embedding_blocks
 
         numerical_input = list(map(lambda x: keras.layers.Input(shape=(1,), name='numerical_{0}'.format(x), dtype=tf.float32), numerical_features))
         cat_input = list(map(lambda x: keras.layers.Input(shape=(1,), name="cat_{0}".format(x[0]), dtype=tf.int32), cat_features))
@@ -173,12 +174,29 @@ class DeepFM:
                                                         embeddings_regularizer=keras.regularizers.l2(l2_embedding),
                                                         )
             embeding = embedding_layer(cat_input[idx])
+
+            if embedding_blocks > 1:
+                embedding_layers = [embeding]
+                for i in range(1, embedding_blocks):
+                    block_embedding_layer = tf.keras.layers.Embedding(size, embedding_size,
+                                                                name='emb_{0}_block_{1}'.format(name, i),
+                                                                embeddings_initializer=keras.initializers.RandomNormal(
+                                                                    mean=0.0, stddev=init_std, seed=seed),
+                                                                embeddings_regularizer=keras.regularizers.l2(
+                                                                    l2_embedding),
+                                                                )
+                    embeding = block_embedding_layer(cat_input[idx])
+                    embeding = keras.layers.Add()([embedding_layers[-1], embeding])
+                    embedding_layers.append(embeding)
+                embeding = keras.layers.Concatenate(axis=-1)(embedding_layers)
+
             embeding_input.append(embeding)
 
+
         for idx, name in enumerate(numerical_features):
-            x = keras.layers.Dense(embedding_size, kernel_regularizer=keras.regularizers.l2(l2_embedding),
+            x = keras.layers.Dense(embedding_size * embedding_blocks, kernel_regularizer=keras.regularizers.l2(l2_embedding),
                                    bias_regularizer=keras.regularizers.l2(l2_embedding))(numerical_input[idx])
-            x = keras.layers.Reshape([1, embedding_size])(x)
+            x = keras.layers.Reshape([1, embedding_size * embedding_blocks])(x)
             embeding_input.append(x)
 
         concat = keras.layers.Concatenate(axis=1)(embeding_input)
@@ -199,60 +217,7 @@ class DeepFM:
         self.keras_model = tf.keras.models.Model(cat_input + numerical_input, outputs=predictions)
 
     def model_identity(self):
-        name = 'DNN_emb_{0}_l2_emb_{1}_l2_dnn_{2}_dnn'.format(self.embedding_size, self.l2_reg_embedding, self.l2_reg_dnn)
-        for l in self.dnn_size:
-            name += "_{0}".format(l)
-
-        return name
-
-
-class DeepNFM:
-    def __init__(self, numerical_features, cat_features, embedding_size, dnn_size=(128, 128), dnn_activation=keras.activations.relu, l2_reg_dnn=0.0,
-                 l2_embedding=1e-4, seed=0, init_std=0.01):
-        self.dnn_size=dnn_size
-        self.l2_reg_dnn =l2_reg_dnn
-        self.l2_reg_embedding = l2_embedding
-        self.embedding_size = embedding_size
-
-        numerical_input = list(map(lambda x: keras.layers.Input(shape=(1,), name='numerical_{0}'.format(x), dtype=tf.float32), numerical_features))
-        cat_input = list(map(lambda x: keras.layers.Input(shape=(1,), name="cat_{0}".format(x[0]), dtype=tf.int32), cat_features))
-
-        embeding_input = []
-        for idx, [name, size] in enumerate(cat_features):
-            embedding_layer = tf.keras.layers.Embedding(size, embedding_size,
-                                                  name='emb_' + name,
-                                                        embeddings_initializer=keras.initializers.RandomNormal(
-                                                            mean=0.0, stddev=init_std, seed=seed),
-                                                        embeddings_regularizer=keras.regularizers.l2(l2_embedding),
-                                                        )
-            embeding = embedding_layer(cat_input[idx])
-            embeding_input.append(embeding)
-
-        for idx, name in enumerate(numerical_features):
-            x = keras.layers.Dense(embedding_size, kernel_regularizer=keras.regularizers.l2(l2_embedding),
-                                   bias_regularizer=keras.regularizers.l2(l2_embedding))(numerical_input[idx])
-            x = keras.layers.Reshape([1, embedding_size])(x)
-            embeding_input.append(x)
-
-        concat = keras.layers.Concatenate(axis=1)(embeding_input)
-
-        fm_out = NFM()(concat)
-        deep_input = tf.keras.layers.Flatten()(concat)
-
-        self.dnn = DNN(dnn_size, dnn_activation, l2_reg_dnn)
-
-        deep_out = self.dnn(deep_input)
-        deep_logit = tf.keras.layers.Dense(
-            1, use_bias=False, activation=None)(deep_out)
-
-        logit = keras.layers.add([deep_logit, fm_out])
-
-        predictions = keras.layers.Dense(1, activation='sigmoid', use_bias=False)(logit)
-
-        self.keras_model = tf.keras.models.Model(cat_input + numerical_input, outputs=predictions)
-
-    def model_identity(self):
-        name = 'DeepNFM_emb_{0}_l2_emb_{1}_l2_dnn_{2}_dnn'.format(self.embedding_size, self.l2_reg_embedding, self.l2_reg_dnn)
+        name = 'DNN_emb_{0}x{3}_l2_emb_{1}_l2_dnn_{2}_dnn'.format(self.embedding_size, self.l2_reg_embedding, self.l2_reg_dnn, self.embedding_blocks)
         for l in self.dnn_size:
             name += "_{0}".format(l)
 
