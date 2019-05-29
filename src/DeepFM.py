@@ -186,7 +186,8 @@ class DeepFM:
                                                                     l2_embedding),
                                                                 )
                     embeding = block_embedding_layer(cat_input[idx])
-                    embeding = keras.layers.Add()([embedding_layers[-1], embeding])
+                    embeding = keras.layers.Lambda(lambda x: 1.0 + x)(embeding)
+                    embeding = keras.layers.Multiply()([embedding_layers[-1], embeding])
                     embedding_layers.append(embeding)
                 embeding = keras.layers.Concatenate(axis=-1)(embedding_layers)
 
