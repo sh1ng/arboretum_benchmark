@@ -479,7 +479,7 @@ class exDeepFM:
 
         concat = keras.layers.Concatenate(axis=1)(embeding_input)
 
-        cin_out = CIN(cin_size, keras.activations.relu, l2_reg=l2_reg_cin, split_half=Trues)(concat)
+        cin_out = CIN(cin_size, keras.activations.relu, l2_reg=l2_reg_cin, split_half=True)(concat)
         deep_input = tf.keras.layers.Flatten()(concat)
 
         self.dnn = DNN(dnn_size, dnn_activation, l2_reg_dnn)
