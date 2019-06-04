@@ -1,3 +1,12 @@
+import tensorflow as tf
+from keras.backend.tensorflow_backend import set_session
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True  # dynamically grow the memory used on the GPU
+config.log_device_placement = True  # to log device placement (on which device the operation ran)
+                                    # (nothing gets printed in Jupyter, only if you run it standalone)
+sess = tf.Session(config=config)
+set_session(sess)  # set this TensorFlow session as the default session for Keras
+
 import pandas as pd
 from sklearn.metrics import log_loss, roc_auc_score
 from sklearn.model_selection import train_test_split
@@ -7,7 +16,7 @@ import tensorflow as tf
 from tensorflow.keras.callbacks import TensorBoard
 import gc
 
-from DeepFM import DeepFM, exDeepFM
+from DeepFM import DeepFM, exDeepFM, exDeepFM2
 
 if __name__ == "__main__":
 
@@ -29,7 +38,7 @@ if __name__ == "__main__":
     file = '../data/dac/train.txt'
 
     data = pd.read_csv(file,
-                       sep='\t', header=None, names=names, dtype=dtypes)
+                       sep='\t', header=None, names=names, dtype=dtypes, nrows=1000)
 
     cat_features = []
     threshold = 4
@@ -54,7 +63,7 @@ if __name__ == "__main__":
     data[numerical_feature_names] = mms.fit_transform(data[numerical_feature_names]).astype(np.float32)
     gc.collect()
 
-    model = exDeepFM(numerical_feature_names, cat_features, embedding_size=8, l2_embedding=1e-5, l2_reg_dnn=1.1e-6, dnn_size=(256,256,256), cin_size=(128, 128))
+    model = exDeepFM2(numerical_feature_names, cat_features, embedding_size=8, l2_embedding=1e-5, l2_reg_dnn=1.1e-6, dnn_size=(256,256,256), cin_size=(10, 10))
     print('training...', model.model_identity())
     model.keras_model.compile(tf.keras.optimizers.Adam(1e-3), "binary_crossentropy",
                   metrics=['binary_crossentropy'], )
@@ -68,4 +77,4 @@ if __name__ == "__main__":
     input = train_model_cat_input + train_model_numerical_input
 
     model.keras_model.fit(input, train_target,
-                        batch_size=1024*4, epochs=20, verbose=2, validation_split=0.2, callbacks=[tensorboard])
+                        batch_size=16, epochs=20, verbose=2, validation_split=0.2, callbacks=[tensorboard])

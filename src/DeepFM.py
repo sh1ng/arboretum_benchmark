@@ -176,7 +176,7 @@ class CIN(Layer):
         - [Lian J, Zhou X, Zhang F, et al. xDeepFM: Combining Explicit and Implicit Feature Interactions for Recommender Systems[J]. arXiv preprint arXiv:1803.05170, 2018.] (https://arxiv.org/pdf/1803.05170.pdf)
     """
 
-    def __init__(self, layer_size, activation, split_half=True, l2_reg=1e-5, seed=1024, **kwargs):
+    def __init__(self, layer_size, activation, split_half=False, l2_reg=1e-5, seed=1024, **kwargs):
         if len(layer_size) == 0:
             raise ValueError(
                 "layer_size must be a list(tuple) of length greater than 1")
@@ -286,6 +286,109 @@ class CIN(Layer):
 
 
 
+class CIN2(Layer):
+    """Compressed Interaction Network used in xDeepFM.This implemention is
+    adapted from code that the author of the paper published on https://github.com/Leavingseason/xDeepFM.
+
+      Input shape
+        - 3D tensor with shape: ``(batch_size,field_size,embedding_size)``.
+
+      Output shape
+        - 2D tensor with shape: ``(batch_size, featuremap_num)`` ``featuremap_num =  sum(self.layer_size[:-1]) // 2 + self.layer_size[-1]`` if ``split_half=True``,else  ``sum(layer_size)`` .
+
+      Arguments
+        - **layer_size** : list of int.Feature maps in each layer.
+
+        - **activation** : activation function used on feature maps.
+
+        - **seed** : A Python integer to use as random seed.
+
+      References
+        - [Lian J, Zhou X, Zhang F, et al. xDeepFM: Combining Explicit and Implicit Feature Interactions for Recommender Systems[J]. arXiv preprint arXiv:1803.05170, 2018.] (https://arxiv.org/pdf/1803.05170.pdf)
+    """
+
+    def __init__(self, layer_size, activation, l2_reg=1e-5, seed=1024, **kwargs):
+        if len(layer_size) == 0:
+            raise ValueError(
+                "layer_size must be a list(tuple) of length greater than 1")
+        self.layer_size = layer_size
+        self.activation = activation
+        self.l2_reg = l2_reg
+        self.seed = seed
+        super(CIN2, self).__init__(**kwargs)
+
+    def build(self, input_shape):
+        if len(input_shape) != 3:
+            raise ValueError(
+                "Unexpected inputs dimensions %d, expect to be 3 dimensions" % (len(input_shape)))
+
+        self.field_nums = [input_shape[1].value]
+        self.filters = []
+        self.bias = []
+        for i, size in enumerate(self.layer_size):
+
+            self.filters.append(self.add_weight(name='filter' + str(i),
+                                                shape=[1, self.field_nums[-1]
+                                                       * self.field_nums[0], size],
+                                                dtype=tf.float32, initializer=glorot_uniform(seed=self.seed + i),
+                                                regularizer=l2(self.l2_reg)))
+
+            self.bias.append(self.add_weight(name='bias' + str(i), shape=[size], dtype=tf.float32,
+                                             initializer=tf.keras.initializers.Zeros()))
+
+            self.field_nums.append(size)
+
+        self.activation_layers = [self.activation for _ in self.layer_size]
+
+        super(CIN2, self).build(input_shape)  # Be sure to call this somewhere!
+
+    def call(self, inputs, **kwargs):
+
+        if K.ndim(inputs) != 3:
+            raise ValueError(
+                "Unexpected inputs dimensions %d, expect to be 3 dimensions" % (K.ndim(inputs)))
+
+        dim = inputs.get_shape()[-1].value
+        hidden_nn_layers = [inputs]
+        final_result = []
+
+        for idx, layer_size in enumerate(self.layer_size):
+            dot_result = tf.einsum('imj,inj->imnj', hidden_nn_layers[0], hidden_nn_layers[-1])
+            dot_result = tf.reshape(
+                    dot_result, shape=[-1, self.field_nums[0] * self.field_nums[idx], dim])
+
+            curr_out = tf.nn.conv1d(
+                dot_result, filters=self.filters[idx], stride=1, padding='VALID', data_format='NCW')
+
+
+            curr_out = tf.nn.bias_add(tf.expand_dims(curr_out, axis=-1), self.bias[idx], data_format='NCHW')
+            curr_out = tf.squeeze(curr_out, axis=-1)
+
+            curr_out = self.activation_layers[idx](curr_out)
+
+            direct_connect = curr_out
+            next_hidden = curr_out
+
+            final_result.append(direct_connect)
+            hidden_nn_layers.append(next_hidden)
+
+        result = tf.concat(final_result, axis=1)
+        print(result)
+        result = tf.reduce_sum(result, -1, keep_dims=False)
+
+        return result
+
+    def compute_output_shape(self, input_shape):
+        featuremap_num = sum(self.layer_size)
+        return (None, featuremap_num)
+
+    def get_config(self, ):
+
+        config = {'layer_size': self.layer_size, 'activation': self.activation,
+                  'seed': self.seed}
+        base_config = super(CIN2, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
+
 
 class DeepFM:
     def __init__(self, numerical_features, cat_features, embedding_size,  dnn_size=(128, 128), dnn_activation=keras.activations.relu, l2_reg_dnn=0.0,
@@ -376,7 +479,7 @@ class exDeepFM:
 
         concat = keras.layers.Concatenate(axis=1)(embeding_input)
 
-        cin_out = CIN(cin_size, keras.activations.relu, l2_reg=l2_reg_cin)(concat)
+        cin_out = CIN(cin_size, keras.activations.relu, l2_reg=l2_reg_cin, split_half=False)(concat)
         deep_input = tf.keras.layers.Flatten()(concat)
 
         self.dnn = DNN(dnn_size, dnn_activation, l2_reg_dnn)
@@ -386,6 +489,8 @@ class exDeepFM:
             1, use_bias=False, activation=None)(deep_out)
 
         logit = keras.layers.add([deep_logit, cin_out])
+
+        print('final', deep_logit, cin_out, logit)
 
         predictions = keras.layers.Dense(1, activation='sigmoid', use_bias=False)(logit)
 
@@ -402,5 +507,70 @@ class exDeepFM:
             name += "_{0}".format(l)
 
         return name
+
+
+class exDeepFM2:
+    def __init__(self, numerical_features, cat_features, embedding_size, cin_size, dnn_size, dnn_activation=keras.activations.relu, l2_reg_dnn=0.0, l2_reg_cin=1e-5,
+                 l2_embedding=1e-4, seed=0, init_std=0.01):
+        self.dnn_size=dnn_size
+        self.cin_size = cin_size
+        self.l2_reg_dnn =l2_reg_dnn
+        self.l2_reg_embedding = l2_embedding
+        self.l2_reg_cin = l2_reg_cin
+        self.embedding_size = embedding_size
+
+        numerical_input = list(map(lambda x: keras.layers.Input(shape=(1,), name='numerical_{0}'.format(x), dtype=tf.float32), numerical_features))
+        cat_input = list(map(lambda x: keras.layers.Input(shape=(1,), name="cat_{0}".format(x[0]), dtype=tf.int32), cat_features))
+
+        embeding_input = []
+        for idx, [name, size] in enumerate(cat_features):
+            embedding_layer = tf.keras.layers.Embedding(size, embedding_size,
+                                                  name='emb_' + name,
+                                                        embeddings_initializer=keras.initializers.RandomNormal(
+                                                            mean=0.0, stddev=init_std, seed=seed),
+                                                        embeddings_regularizer=keras.regularizers.l2(l2_embedding),
+                                                        )
+            embeding = embedding_layer(cat_input[idx])
+
+            embeding_input.append(embeding)
+
+
+        for idx, name in enumerate(numerical_features):
+            x = keras.layers.Dense(embedding_size, kernel_regularizer=keras.regularizers.l2(l2_embedding),
+                                   bias_regularizer=keras.regularizers.l2(l2_embedding))(numerical_input[idx])
+            x = keras.layers.Reshape([1, embedding_size])(x)
+            embeding_input.append(x)
+
+        concat = keras.layers.Concatenate(axis=1)(embeding_input)
+
+        cin_out = CIN2(cin_size, keras.activations.relu, l2_reg=l2_reg_cin)(concat)
+        deep_input = tf.keras.layers.Flatten()(concat)
+
+        self.dnn = DNN(dnn_size, dnn_activation, l2_reg_dnn)
+
+        deep_out = self.dnn(deep_input)
+        deep_logit = tf.keras.layers.Dense(
+            1, use_bias=False, activation=None)(deep_out)
+
+        logit = keras.layers.add([deep_logit, cin_out])
+
+        print('final', deep_logit, cin_out, logit)
+
+        predictions = keras.layers.Dense(1, activation='sigmoid', use_bias=False)(logit)
+
+        self.keras_model = tf.keras.models.Model(cat_input + numerical_input, outputs=predictions)
+
+    def model_identity(self):
+        name = 'exDNN2_emb_{0}_l2_emb_{1}_l2_dnn_{2}_l2_cin_{3}_dnn'.format(self.embedding_size, self.l2_reg_embedding, self.l2_reg_dnn, self.l2_reg_cin)
+        for l in self.dnn_size:
+            name += "_{0}".format(l)
+
+        name +='_cnn_size'
+
+        for l in self.cin_size:
+            name += "_{0}".format(l)
+
+        return name
+
 
 
