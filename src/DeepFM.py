@@ -373,7 +373,7 @@ class CIN2(Layer):
             hidden_nn_layers.append(next_hidden)
 
         result = tf.concat(final_result, axis=1)
-        print(result)
+
         result = tf.reduce_sum(result, -1, keep_dims=False)
 
         return result
@@ -479,7 +479,7 @@ class exDeepFM:
 
         concat = keras.layers.Concatenate(axis=1)(embeding_input)
 
-        cin_out = CIN(cin_size, keras.activations.relu, l2_reg=l2_reg_cin, split_half=False)(concat)
+        cin_out = CIN(cin_size, keras.activations.relu, l2_reg=l2_reg_cin, split_half=Trues)(concat)
         deep_input = tf.keras.layers.Flatten()(concat)
 
         self.dnn = DNN(dnn_size, dnn_activation, l2_reg_dnn)
@@ -490,7 +490,6 @@ class exDeepFM:
 
         logit = keras.layers.add([deep_logit, cin_out])
 
-        print('final', deep_logit, cin_out, logit)
 
         predictions = keras.layers.Dense(1, activation='sigmoid', use_bias=False)(logit)
 
@@ -553,8 +552,6 @@ class exDeepFM2:
             1, use_bias=False, activation=None)(deep_out)
 
         logit = keras.layers.add([deep_logit, cin_out])
-
-        print('final', deep_logit, cin_out, logit)
 
         predictions = keras.layers.Dense(1, activation='sigmoid', use_bias=False)(logit)
 
