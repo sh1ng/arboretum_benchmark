@@ -1,5 +1,6 @@
 import tensorflow as tf
-# from tensorflow.python.keras.backend.tensorflow_backend import set_session
+# uncomment in case of unknown error
+# from keras.backend.tensorflow_backend import set_session
 # config = tf.ConfigProto()
 # config.gpu_options.allow_growth = True  # dynamically grow the memory used on the GPU
 # config.log_device_placement = True  # to log device placement (on which device the operation ran)
@@ -62,7 +63,7 @@ if __name__ == "__main__":
     data[numerical_feature_names] = mms.fit_transform(data[numerical_feature_names]).astype(np.float32)
     gc.collect()
 
-    model = exDeepFM(numerical_feature_names, cat_features, embedding_size=8, l2_embedding=1e-5, l2_reg_dnn=1.1e-6, dnn_size=(400, 400), cin_size=(194, 194))
+    model = exDeepFM2(numerical_feature_names, cat_features, embedding_size=8, l2_embedding=1e-6, l2_reg_dnn=0.0, l2_reg_cin=1e-6, dnn_size=(200, 200), cin_size=(128, 64, 32, 16))
     print('training...', model.model_identity())
     model.keras_model.compile(tf.keras.optimizers.Adam(1e-3), "binary_crossentropy",
                   metrics=['binary_crossentropy'], )

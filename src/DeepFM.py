@@ -176,7 +176,7 @@ class CIN(Layer):
         - [Lian J, Zhou X, Zhang F, et al. xDeepFM: Combining Explicit and Implicit Feature Interactions for Recommender Systems[J]. arXiv preprint arXiv:1803.05170, 2018.] (https://arxiv.org/pdf/1803.05170.pdf)
     """
 
-    def __init__(self, layer_size, activation, split_half=False, l2_reg=1e-5, seed=1024, **kwargs):
+    def __init__(self, layer_size, activation, split_half=True, l2_reg=1e-5, seed=1024, **kwargs):
         if len(layer_size) == 0:
             raise ValueError(
                 "layer_size must be a list(tuple) of length greater than 1")
@@ -307,7 +307,7 @@ class CIN2(Layer):
         - [Lian J, Zhou X, Zhang F, et al. xDeepFM: Combining Explicit and Implicit Feature Interactions for Recommender Systems[J]. arXiv preprint arXiv:1803.05170, 2018.] (https://arxiv.org/pdf/1803.05170.pdf)
     """
 
-    def __init__(self, layer_size, activation, l2_reg=1e-5, seed=1024, **kwargs):
+    def __init__(self, layer_size, activation, split_half=True, l2_reg=1e-5, seed=1024, **kwargs):
         if len(layer_size) == 0:
             raise ValueError(
                 "layer_size must be a list(tuple) of length greater than 1")
@@ -315,6 +315,7 @@ class CIN2(Layer):
         self.activation = activation
         self.l2_reg = l2_reg
         self.seed = seed
+        self.split_half = split_half
         super(CIN2, self).__init__(**kwargs)
 
     def build(self, input_shape):
@@ -336,7 +337,14 @@ class CIN2(Layer):
             self.bias.append(self.add_weight(name='bias' + str(i), shape=[size], dtype=tf.float32,
                                              initializer=tf.keras.initializers.Zeros()))
 
-            self.field_nums.append(size)
+            if self.split_half:
+                if i != len(self.layer_size) - 1 and size % 2 > 0:
+                    raise ValueError(
+                        "layer_size must be even number except for the last layer when split_half=True")
+
+                self.field_nums.append(size // 2)
+            else:
+                self.field_nums.append(size)
 
         self.activation_layers = [self.activation for _ in self.layer_size]
 
@@ -366,8 +374,16 @@ class CIN2(Layer):
 
             curr_out = self.activation_layers[idx](curr_out)
 
-            direct_connect = curr_out
-            next_hidden = curr_out
+            if self.split_half:
+                if idx != len(self.layer_size) - 1:
+                    next_hidden, direct_connect = tf.split(
+                        curr_out, 2 * [layer_size // 2], 1)
+                else:
+                    direct_connect = curr_out
+                    next_hidden = 0
+            else:
+                direct_connect = curr_out
+                next_hidden = curr_out
 
             final_result.append(direct_connect)
             hidden_nn_layers.append(next_hidden)
@@ -379,12 +395,16 @@ class CIN2(Layer):
         return result
 
     def compute_output_shape(self, input_shape):
-        featuremap_num = sum(self.layer_size)
+        if self.split_half:
+            featuremap_num = sum(
+                self.layer_size[:-1]) // 2 + self.layer_size[-1]
+        else:
+            featuremap_num = sum(self.layer_size)
         return (None, featuremap_num)
 
     def get_config(self, ):
 
-        config = {'layer_size': self.layer_size, 'activation': self.activation,
+        config = {'layer_size': self.layer_size, 'split_half': self.split_half, 'activation': self.activation,
                   'seed': self.seed}
         base_config = super(CIN2, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
