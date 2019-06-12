@@ -38,7 +38,7 @@ if __name__ == "__main__":
     file = '../data/dac/train.txt'
 
     data = pd.read_csv(file,
-                       sep='\t', header=None, names=names, dtype=dtypes)
+                       sep='\t', header=None, names=names, dtype=dtypes, nrows=1000000)
 
     cat_features = []
     threshold = 4
@@ -59,9 +59,10 @@ if __name__ == "__main__":
 
     target = ['label']
 
-    mms = MinMaxScaler(feature_range=(0, 1))
-    data[numerical_feature_names] = mms.fit_transform(data[numerical_feature_names]).astype(np.float32)
-    gc.collect()
+    for col in numerical_feature_names:
+        mms = MinMaxScaler(feature_range=(0, 1))
+        data[col] = mms.fit_transform(data[col].values.reshape(-1, 1)).astype(np.float32)
+        gc.collect()
 
     print(numerical_feature_names, cat_features)
     model = exDeepFM(numerical_feature_names, cat_features, embedding_size=8, l2_embedding=1e-6, l2_reg_dnn=0.0, l2_reg_cin=1e-6, dnn_size=(200, 200), cin_size=(128, 64, 32, 16))
