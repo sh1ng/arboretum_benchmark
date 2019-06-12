@@ -16,7 +16,7 @@ import numpy as np
 from tensorflow.keras.callbacks import TensorBoard
 import gc
 
-from DeepFM import DeepFM, exDeepFM, exDeepFM2
+from DeepFM import DeepFM, exDeepFM
 
 if __name__ == "__main__":
 
@@ -63,7 +63,9 @@ if __name__ == "__main__":
     data[numerical_feature_names] = mms.fit_transform(data[numerical_feature_names]).astype(np.float32)
     gc.collect()
 
-    model = exDeepFM2(numerical_feature_names, cat_features, embedding_size=8, l2_embedding=1e-6, l2_reg_dnn=0.0, l2_reg_cin=1e-6, dnn_size=(200, 200), cin_size=(128, 64, 32, 16))
+    print(numerical_feature_names, cat_features)
+    model = exDeepFM(numerical_feature_names, cat_features, embedding_size=8, l2_embedding=1e-6, l2_reg_dnn=0.0, l2_reg_cin=1e-6, dnn_size=(200, 200), cin_size=(128, 64, 32, 16))
+    model.keras_model.save('model.hd5')
     print('training...', model.model_identity())
     model.keras_model.compile(tf.keras.optimizers.Adam(1e-3), "binary_crossentropy",
                   metrics=['binary_crossentropy'], )
