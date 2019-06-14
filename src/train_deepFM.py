@@ -65,19 +65,25 @@ if __name__ == "__main__":
         gc.collect()
 
     print(numerical_feature_names, cat_features)
-    model = exDeepFM(numerical_feature_names, cat_features, embedding_size=8, l2_embedding=1e-6, l2_reg_dnn=0.0, l2_reg_cin=1e-6, dnn_size=(200, 200), cin_size=(128, 64, 32, 16))
-    model.keras_model.save('model.hd5')
-    print('training...', model.model_identity())
-    model.keras_model.compile(tf.keras.optimizers.Adam(1e-3), "binary_crossentropy",
-                  metrics=['binary_crossentropy'], )
 
-    tensorboard = TensorBoard(log_dir="logs/{0}".format(model.model_identity()))
+    for embedding in [8, 12]:
+        for l2_embedding in [1e-6, 5e-7, 2.5e-7]:
+            for l2_cin in [1e-6, 5e-7]:
+                for cin_size in[(128, 64, 32, 16), (64, 32, 16, 8), (64, 32, 16, 8, 4), (32, 16, 8, 4, 4, 4)]:
 
-    train_model_cat_input = [data[feature].values for feature in cat_feature_names]
-    train_model_numerical_input = [data[feature].values for feature in numerical_feature_names]
-    train_target = data[target].values
+                    model = exDeepFM(numerical_feature_names, cat_features, embedding_size=embedding, l2_embedding=l2_embedding, l2_reg_dnn=1e-7, l2_reg_cin=l2_cin, dnn_size=(200, 200), cin_size=cin_size)
+                    # model.keras_model.save('model.hd5')
+                    print('training...', model.model_identity())
+                    model.keras_model.compile(tf.keras.optimizers.Adam(1e-3), "binary_crossentropy",
+                                  metrics=['binary_crossentropy'], )
 
-    input = train_model_cat_input + train_model_numerical_input
+                    tensorboard = TensorBoard(log_dir="logs/{0}".format(model.model_identity()))
 
-    model.keras_model.fit(input, train_target,
-                        batch_size=4*1024, epochs=20, verbose=2, validation_split=0.2, callbacks=[tensorboard])
+                    train_model_cat_input = [data[feature].values for feature in cat_feature_names]
+                    train_model_numerical_input = [data[feature].values for feature in numerical_feature_names]
+                    train_target = data[target].values
+
+                    input = train_model_cat_input + train_model_numerical_input
+
+                    model.keras_model.fit(input, train_target,
+                                        batch_size=2*1024, epochs=20, verbose=2, validation_split=0.2, callbacks=[tensorboard])
