@@ -3,7 +3,6 @@ import pandas as pd
 import arboretum
 import json
 from sklearn.metrics import roc_auc_score
-from h2o4gpu.util.gpu import cudaresetdevice
 
 import time
 from sklearn.model_selection import train_test_split
@@ -76,5 +75,3 @@ if __name__ == '__main__':
         del X_train
         del X_test
         del model
-
-        cudaresetdevice(0, -1)
