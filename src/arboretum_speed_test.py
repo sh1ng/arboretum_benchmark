@@ -10,12 +10,12 @@ from sklearn.model_selection import train_test_split
 
 
 if __name__ == '__main__':
-    df = pd.read_csv('../data/HIGGS.csv', names=['label', 'lepton pT',
-                                                 'lepton eta', 'lepton phi', 'missing energy magnitude', 'missing energy phi',
-                                                 'jet 1 pt', 'jet 1 eta', 'jet 1 phi', 'jet 1 b-tag', 'jet 2 pt', 'jet 2 eta',
-                                                 'jet 2 phi', 'jet 2 b-tag', 'jet 3 pt', 'jet 3 eta', 'jet 3 phi', 'jet 3 b-tag',
-                                                 'jet 4 pt', 'jet 4 eta', 'jet 4 phi', 'jet 4 b-tag', 'm_jj', 'm_jjj', 'm_lv',
-                                                 'm_jlv', 'm_bb', 'm_wbb', 'm_wwbb'], nrows=1000000)
+    df = pd.read_csv('../data/HIGGS.csv.gz', names=['label', 'lepton pT',
+                                                    'lepton eta', 'lepton phi', 'missing energy magnitude', 'missing energy phi',
+                                                    'jet 1 pt', 'jet 1 eta', 'jet 1 phi', 'jet 1 b-tag', 'jet 2 pt', 'jet 2 eta',
+                                                    'jet 2 phi', 'jet 2 b-tag', 'jet 3 pt', 'jet 3 eta', 'jet 3 phi', 'jet 3 b-tag',
+                                                    'jet 4 pt', 'jet 4 eta', 'jet 4 phi', 'jet 4 b-tag', 'm_jj', 'm_jjj', 'm_lv',
+                                                    'm_jlv', 'm_bb', 'm_wbb', 'm_wwbb'], nrows=1000000)
     labels = df['label'].values
     df = df.drop(['label'], axis=1)
     X = df.values
@@ -32,13 +32,14 @@ if __name__ == '__main__':
 
         config = json.dumps({'objective': 1,
                              'method': 1,
-                             'hist_size': 256,
+                             'hist_size': 255,
                              'internals':
                              {
-                                 'double_precision': True,
+                                 'double_precision': False,
                                  'compute_overlap': 2,
                                  'use_hist_subtraction_trick': True,
                                  'dynamic_parallelism': False,
+                                 'upload_features': True,
                              },
                              'verbose':
                              {
@@ -49,7 +50,7 @@ if __name__ == '__main__':
                              'tree':
                              {
                                  'eta': 0.1,
-                                 'max_depth': 10,
+                                 'max_depth': 6,
                                  'gamma': 0.0,
                                  'min_child_weight': 100.0,
                                  'min_leaf_size': 0,
@@ -61,7 +62,7 @@ if __name__ == '__main__':
         model = arboretum.Garden(config, X_train)
         iter_time = time.time()
         # grow trees
-        for i in range(2):
+        for i in range(4):
             model.grow_tree()
             print('next tree', time.time() - iter_time)
             iter_time = time.time()
