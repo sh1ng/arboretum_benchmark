@@ -34,10 +34,10 @@ if __name__ == '__main__':
                              'hist_size': 255,
                              'internals':
                              {
-                                 'double_precision': False,
-                                 'compute_overlap': 2,
+                                 'double_precision': True,
+                                 'compute_overlap': 3,
                                  'use_hist_subtraction_trick': True,
-                                 'dynamic_parallelism': False,
+                                 'dynamic_parallelism': True,
                                  'upload_features': True,
                              },
                              'verbose':
@@ -58,7 +58,9 @@ if __name__ == '__main__':
                                  'lambda': 0.0,
                                  'alpha': 0.0
                              }})
-        model = arboretum.Garden(config, X_train)
+        model = arboretum.Garden(config)
+        model.data = X_train
+        model.labels_count = 1
         iter_time = time.time()
         # grow trees
         for i in range(4):
@@ -71,6 +73,8 @@ if __name__ == '__main__':
         labels_pred_test = model.predict(X_test)
         print('roc auc train: {0} test: {1}'.format(roc_auc_score(labels_train, labels_pred),
                                                     roc_auc_score(labels_test, labels_pred_test)))
+
+        # print(model.dump())
 
         del X_train
         del X_test
