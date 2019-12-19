@@ -34,7 +34,7 @@ if __name__ == '__main__':
                   'internals':
                   {
                       'double_precision': False,
-                      'compute_overlap': 3,
+                      'compute_overlap': 2,
                       'use_hist_subtraction_trick': True,
                       'dynamic_parallelism': True,
                       'upload_features': True,
