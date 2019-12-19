@@ -47,27 +47,27 @@ if __name__ == '__main__':
 
     start_time = time.time()
     n_rounds = 100
+    from catboost import CatBoostClassifier
+    model = CatBoostClassifier(
+        grow_policy='Depthwise',
+        iterations=n_rounds,
+        learning_rate=0.1,
+        task_type='GPU',
+        max_bin=255,
+        min_data_in_leaf=50,
+        depth=5
+    )
+    model.fit(
+        X_train, labels_train,
+        verbose=True
+    )
+    print('Model is fitted: ' + str(model.is_fitted()))
+    print('Model params:')
+    print(model.get_params())
 
-    X_train = xgboost.DMatrix(X_train, label=labels_train)
-    X_test = xgboost.DMatrix(X_test)
-
-    param = {'max_depth': 1,
-             'silent': False, 'objective': "reg:logistic"}
-    param['nthread'] = 4
-    param['min_child_weight'] = 100
-    param['colspan_by_tree'] = 1.0
-    param['colspan_by_level'] = 1.0
-    param['lambda'] = 0.0
-    param['eta'] = 0.1
-    param['gamma'] = 0.0
-    param['alpha'] = 0.0
-    param['tree_method'] = 'gpu_hist'
-
-    model = xgboost.train(param, X_train, n_rounds)
-
+    iter_time = time.time()
     print((time.time() - start_time)/n_rounds)
-
     labels_pred = model.predict(X_train)
     labels_pred_test = model.predict(X_test)
-    print('roc auc train: {0} test: {1}'.format(roc_auc_score(labels_train, labels_pred),
-                                                roc_auc_score(labels_test, labels_pred_test)))
+    print('roc auc train: {0} test: {1}'.format(roc_auc_score(y_train, labels_pred),
+                                                roc_auc_score(y_test, labels_pred_test)))

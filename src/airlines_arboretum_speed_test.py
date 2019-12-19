@@ -41,51 +41,53 @@ labels = df["IsArrDelayed"].cat.codes.values
 df = df.drop(["IsArrDelayed"], axis=1)
 X = np.nan_to_num(df.values)
 
-start_time = time.time()
 
 X_train, X_test, labels_train, labels_test = train_test_split(
     X, labels, test_size=0.2, random_state=42)
 
+start_time = time.time()
+n_rounds = 100
+
 X_train = arboretum.DMatrix(X_train, y=labels_train)
 X_test = arboretum.DMatrix(X_test)
 
-config = json.dumps({'objective': 1,
-                     'method': 1,
-                     'hist_size': 255,
-                     'internals':
-                     {
-                         'double_precision': False,
-                         'compute_overlap': 2,
-                         'use_hist_subtraction_trick': True,
-                         'dynamic_parallelism': False,
-                         'upload_features': True,
-                     },
-                     'verbose':
-                     {
-                         'gpu': True,
-                         'booster': True,
-                         'data': False,
-                     },
-                     'tree':
-                     {
-                         'eta': 0.1,
-                         'max_depth': 6,
-                         'gamma': 0.0,
-                         'min_child_weight': 100.0,
-                         'min_leaf_size': 0,
-                         'colsample_bytree': 1.0,
-                         'colsample_bylevel': 1.0,
-                         'lambda': 0.0,
-                         'alpha': 0.0
-                     }})
+config = {'objective': 1,
+          'method': 1,
+          'internals':
+          {
+              'double_precision': False,
+              'compute_overlap': 2,
+              'use_hist_subtraction_trick': True,
+              'dynamic_parallelism': False,
+              'upload_features': True,
+              'hist_size': 255,
+          },
+          'verbose':
+          {
+              'gpu': True,
+              'booster': True,
+              'data': False,
+          },
+          'tree':
+          {
+              'eta': 0.1,
+              'max_depth': 6,
+              'gamma': 0.0,
+              'min_child_weight': 100.0,
+              'min_leaf_size': 0,
+              'colsample_bytree': 1.0,
+              'colsample_bylevel': 1.0,
+              'lambda': 0.0,
+              'alpha': 0.0
+          }}
 model = arboretum.Garden(config, X_train)
 iter_time = time.time()
 # grow trees
-for i in range(4):
+for i in range(n_rounds):
     model.grow_tree()
     print('next tree', time.time() - iter_time)
     iter_time = time.time()
-print(time.time() - start_time)
+print((time.time() - start_time)/n_rounds)
 
 labels_pred = model.predict(X_train)
 labels_pred_test = model.predict(X_test)

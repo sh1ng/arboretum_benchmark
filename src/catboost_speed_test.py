@@ -22,30 +22,29 @@ if __name__ == '__main__':
     X_train, X_test, y_train, y_test = train_test_split(
         X, labels, test_size=0.2, random_state=42)
 
+    n_rounds = 1000
     start_time = time.time()
 
     from catboost import CatBoostClassifier
     model = CatBoostClassifier(
-        iterations=100,
+        grow_policy='Depthwise',
+        iterations=n_rounds,
         learning_rate=0.1,
         task_type='GPU',
         max_bin=255,
         min_data_in_leaf=50,
         depth=5,
-        # loss_function='CrossEntropy'
     )
     model.fit(
         X_train, y_train,
-        # cat_features=cat_features,
-        # eval_set=(X_validation, y_validation),
         verbose=True
     )
+    iter_time = time.time()
+    print((time.time() - start_time)/n_rounds)
     print('Model is fitted: ' + str(model.is_fitted()))
     print('Model params:')
     print(model.get_params())
 
-    iter_time = time.time()
-    print(time.time() - start_time)
     labels_pred = model.predict(X_train)
     labels_pred_test = model.predict(X_test)
     print('roc auc train: {0} test: {1}'.format(roc_auc_score(y_train, labels_pred),
