@@ -36,7 +36,7 @@ if __name__ == '__main__':
                          'DayofMonth': np.float32,
                          'CarrierDelay': np.float32, 'WeatherDelay': np.float32,
                          'NASDelay': np.float32, 'SecurityDelay': np.float32,
-                         'LateAircraftDelay': np.float32}, nrows=20000000)
+                         'LateAircraftDelay': np.float32}, nrows=100000000)
 
     labels = df["IsArrDelayed"].cat.codes.values
     df = df.drop(["IsArrDelayed"], axis=1)

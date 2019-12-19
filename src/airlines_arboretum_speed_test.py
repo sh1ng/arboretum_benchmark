@@ -35,7 +35,7 @@ if __name__ == '__main__':
                          'DayofMonth': np.float32,
                          'CarrierDelay': np.float32, 'WeatherDelay': np.float32,
                          'NASDelay': np.float32, 'SecurityDelay': np.float32,
-                         'LateAircraftDelay': np.float32}, nrows=20000000)
+                         'LateAircraftDelay': np.float32}, nrows=100000000)
 
 labels = df["IsArrDelayed"].cat.codes.values
 df = df.drop(["IsArrDelayed"], axis=1)
@@ -44,6 +44,8 @@ X = np.nan_to_num(df.values)
 
 X_train, X_test, labels_train, labels_test = train_test_split(
     X, labels, test_size=0.2, random_state=42)
+
+print(X_train.shape, X_test.shape)
 
 start_time = time.time()
 n_rounds = 100
