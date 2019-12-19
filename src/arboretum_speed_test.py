@@ -27,7 +27,6 @@ if __name__ == '__main__':
         n_rounds = 1000
 
         X_train = arboretum.DMatrix(X_train, y=labels_train)
-        X_test = arboretum.DMatrix(X_test)
 
         config = {'objective': 1,
                   'method': 1,
@@ -50,7 +49,7 @@ if __name__ == '__main__':
                   {
                       'eta': 0.1,
                       'max_depth': 3,
-                      'gamma_absolute': 0.1,
+                      'gamma_absolute': 0.0,
                       'min_child_weight': 100.0,
                       'min_leaf_size': 0,
                       'colsample_bytree': 1.0,
@@ -67,6 +66,8 @@ if __name__ == '__main__':
             # print('next tree', time.time() - iter_time)
             iter_time = time.time()
         print((time.time() - start_time) / n_rounds)
+
+        X_test = arboretum.DMatrix(X_test)
 
         labels_pred = model.predict(X_train)
         labels_pred_test = model.predict(X_test)

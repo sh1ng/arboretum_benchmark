@@ -27,7 +27,6 @@ if __name__ == '__main__':
     n_rounds = 1000
 
     X_train = xgboost.DMatrix(X_train, label=labels_train)
-    X_test = xgboost.DMatrix(X_test)
 
     param = {'max_depth': 3,
              'verbosity': 2, 'objective': "reg:logistic"}
@@ -45,6 +44,8 @@ if __name__ == '__main__':
     model = xgboost.train(param, X_train, n_rounds)
 
     print((time.time() - start_time)/n_rounds)
+
+    X_test = xgboost.DMatrix(X_test)
 
     labels_pred = model.predict(X_train)
     labels_pred_test = model.predict(X_test)
