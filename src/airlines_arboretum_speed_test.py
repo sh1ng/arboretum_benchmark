@@ -67,12 +67,12 @@ config = {'objective': 1,
           {
               'gpu': True,
               'booster': True,
-              'data': False,
+              'data': True,
           },
           'tree':
           {
               'eta': 0.1,
-              'max_depth': 6,
+              'max_depth': 3,
               'gamma': 0.0,
               'min_child_weight': 100.0,
               'min_leaf_size': 0,
@@ -86,8 +86,8 @@ iter_time = time.time()
 # grow trees
 for i in range(n_rounds):
     model.grow_tree()
-    print('next tree', time.time() - iter_time)
-    iter_time = time.time()
+    # print('next tree', time.time() - iter_time)
+    # iter_time = time.time()
 print((time.time() - start_time)/n_rounds)
 
 X_test = arboretum.DMatrix(X_test)

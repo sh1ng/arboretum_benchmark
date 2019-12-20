@@ -45,6 +45,8 @@ if __name__ == '__main__':
     X_train, X_test, labels_train, labels_test = train_test_split(
         X, labels, test_size=0.2, random_state=42)
 
+    print(X_train.shape, X_test.shape)
+
     start_time = time.time()
     n_rounds = 100
     from catboost import CatBoostClassifier
@@ -55,11 +57,11 @@ if __name__ == '__main__':
         task_type='GPU',
         max_bin=255,
         min_data_in_leaf=50,
-        depth=5
+        depth=3
     )
     model.fit(
         X_train, labels_train,
-        verbose=True
+        verbose=False
     )
     print('Model is fitted: ' + str(model.is_fitted()))
     print('Model params:')

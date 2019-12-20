@@ -45,12 +45,14 @@ if __name__ == '__main__':
     X_train, X_test, labels_train, labels_test = train_test_split(
         X, labels, test_size=0.2, random_state=42)
 
+    print(X_train.shape, X_test.shape)
+
     start_time = time.time()
     n_rounds = 100
 
     X_train = xgboost.DMatrix(X_train, label=labels_train)
 
-    param = {'max_depth': 1,
+    param = {'max_depth': 3,
              'silent': False, 'objective': "reg:logistic"}
     param['nthread'] = 4
     param['min_child_weight'] = 100
