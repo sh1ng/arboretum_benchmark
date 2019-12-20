@@ -71,5 +71,5 @@ if __name__ == '__main__':
     print((time.time() - start_time)/n_rounds)
     labels_pred = model.predict(X_train)
     labels_pred_test = model.predict(X_test)
-    print('roc auc train: {0} test: {1}'.format(roc_auc_score(y_train, labels_pred),
-                                                roc_auc_score(y_test, labels_pred_test)))
+    print('roc auc train: {0} test: {1}'.format(roc_auc_score(labels_train, labels_pred),
+                                                roc_auc_score(labels_test, labels_pred_test)))
