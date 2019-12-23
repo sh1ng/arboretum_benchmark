@@ -30,7 +30,6 @@ if __name__ == '__main__':
 
     param = {'max_depth': 3,
              'verbosity': 2, 'objective': "reg:logistic"}
-    param['nthread'] = 4
     param['min_child_weight'] = 100
     param['colspan_by_tree'] = 1.0
     param['colspan_by_level'] = 1.0
